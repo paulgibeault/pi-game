@@ -1,65 +1,82 @@
-# Pi Game
-
-### Happy Pi Day! March 14th (3/14)
-
-**How many digits of Pi can you recite from memory?**
-
-Pi Game is a fast-paced memorization challenge where you type the digits of Pi on a number pad — one wrong digit and it's game over. Simple to learn, impossible to master.
-
 <div align="center">
 
-### [Play Now](https://paulgibeault.github.io/pi-game/)
+# Pi Game
+
+### How many digits of Pi live in your brain?
+
+<a href="https://paulgibeault.github.io/pi-game/">
+  <img src="https://img.shields.io/badge/▶_PLAY_NOW-Take_the_Challenge-blue?style=for-the-badge&labelColor=1a1a2e&color=e94560" alt="Play Now" height="50" />
+</a>
+
+---
+
+*One wrong digit and it's over.*
 
 </div>
 
----
+Pi Game is a fast-paced memorization gauntlet. Tap digits of Pi on a number pad as fast as you can — every correct digit extends your streak, every mistake ends it. The display grows with you, the sounds rise in pitch, particles explode across the screen, and the pressure never stops.
 
-## How It Works
+**Simple to learn. Impossible to master.**
 
-1. **Press Start** and begin typing digits of Pi after the decimal point
-2. Each correct digit extends your streak — the display grows as you go
-3. **One wrong press and it's over.** Your score and time are saved to the leaderboard
-4. The **Autopsy** reveals the digits you missed so you know what to study
-5. **Study Mode** lets you memorize Pi in chunks of 50 with cover/reveal flashcards
-6. **Practice Mode** gives you a numpad with a scrolling teleprompter — type along without the pressure of game over
+## The Challenge
 
-## Features
+1. **Press Start.** The clock begins.
+2. **Type digits of Pi** after the decimal — 1, 4, 1, 5, 9...
+3. **One wrong press and it's game over.** Your score and time hit the leaderboard.
+4. **Autopsy** reveals exactly where you choked, so you know what to study.
+5. **Study Mode** — memorize Pi in chunks of 50 with cover/reveal flashcards.
+6. **Practice Mode** — a scrolling teleprompter lets you type along without the pressure.
+
+## What Makes It Special
 
 - **4 Visual Themes** — Neural Network (cyberpunk), Precision Blueprint (drafting), Abstract Gallery (minimalist), Orbital Gravity (deep space)
-- **Web Audio** synthesized sounds that rise in pitch as your streak grows, with combo harmonics for fast typing
-- **Particle effects** and screen shake on every keypress
+- **Synthesized audio** that rises in pitch as your streak grows, with combo harmonics for fast fingers
+- **Particle effects & screen shake** on every keypress
 - **Leaderboard** tracking your top 5 runs
-- **Installable** — add to your phone's home screen for a native app experience (PWA with auto-generated icons)
-- **Offline-capable** — runs entirely client-side with localStorage persistence
-- **Resume mid-game** — refresh the page and pick up exactly where you left off
-
-## Tech Stack
-
-Single `index.html` file. No frameworks, no build step, no dependencies.
-
-- Vanilla HTML / CSS / ES6+ JavaScript
-- CSS Custom Properties theming engine
-- Web Audio API for procedural sound
-- Canvas API for particle effects
-- localStorage for state persistence
-- Dynamic PWA manifest with canvas-generated icons
-
-## Run Locally
-
-```
-open index.html
-```
-
-That's it.
-
----
+- **Install it** — add to your home screen for a native app feel (PWA)
+- **Works offline** — no internet needed after first load
+- **Resume mid-game** — close the tab, come back later, pick up right where you left off
 
 <div align="center">
+
+---
 
 *3.14159265358979323846264338327950288...*
 
 **How far can you go?**
 
-### [Take the Challenge](https://paulgibeault.github.io/pi-game/)
+<a href="https://paulgibeault.github.io/pi-game/">
+  <img src="https://img.shields.io/badge/▶_TAKE_THE_CHALLENGE-blue?style=for-the-badge&labelColor=1a1a2e&color=e94560" alt="Take the Challenge" height="40" />
+</a>
+
+---
+
+### More from the PaulStation Catalog
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <a href="https://paulgibeault.github.io/hecknsic/">
+        <img src="https://github.com/paulgibeault/hecknsic/blob/main/img/logo_header.jpg?raw=true" width="120" alt="Hecknsic" /><br />
+        <b>Hecknsic</b><br />
+        <sub>Hexagonal Puzzle</sub>
+      </a>
+    </td>
+    <td align="center" width="33%">
+      <a href="https://paulgibeault.github.io/cozy-solitaire/">
+        <img src="https://github.com/paulgibeault/cozy-solitaire/blob/main/icon.svg?raw=true" width="120" alt="Cozy Solitaire" /><br />
+        <b>Cozy Solitaire</b><br />
+        <sub>Klondike · FreeCell · Spider</sub>
+      </a>
+    </td>
+    <td align="center" width="33%">
+      <a href="https://paulgibeault.github.io/si-syn/">
+        <img src="https://github.com/paulgibeault/si-syn/blob/main/public/icon.svg?raw=true" width="120" alt="Silicon Syndicate" /><br />
+        <b>Silicon Syndicate</b><br />
+        <sub>Logic Puzzle</sub>
+      </a>
+    </td>
+  </tr>
+</table>
 
 </div>
