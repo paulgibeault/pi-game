@@ -182,14 +182,14 @@ body {
 
 /* ===== Top Toolbar ===== */
 .toolbar {
-  position: fixed; top: 12px; right: 12px; z-index: 20;
+  position: fixed; top: calc(env(safe-area-inset-top, 8px) + 8px); right: 12px; z-index: 20;
   display: flex; gap: 8px; align-items: center;
 }
 
 .toolbar-btn {
   background: var(--btn-bg); border: 1.5px solid var(--btn-border);
   border-radius: var(--btn-radius); color: var(--btn-text);
-  font-size: 1.1rem; width: 42px; height: 42px;
+  font-size: 1rem; width: 38px; height: 38px;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: all 0.2s; opacity: 0.6;
   font-family: var(--font-display);
@@ -332,7 +332,7 @@ body {
 .leaderboard-empty { text-align: center; color: var(--text-muted); padding: 16px; font-style: italic; }
 
 /* ===== Game Over Screen ===== */
-.gameover-screen { gap: 16px; padding: 20px; justify-content: flex-start; padding-top: 60px; }
+.gameover-screen { gap: 12px; padding: 16px; justify-content: flex-start; padding-top: calc(env(safe-area-inset-top, 8px) + 54px); }
 .gameover-title {
   font-family: var(--font-display); font-size: clamp(2rem, 6vw, 3.5rem);
   color: var(--error-color); text-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
@@ -387,16 +387,10 @@ body {
 .retry-btn:hover { background: var(--btn-hover); box-shadow: var(--btn-shadow); transform: translateY(-2px); }
 
 /* ===== Study Screen ===== */
-.study-screen { gap: 16px; padding: 20px; justify-content: flex-start; padding-top: 60px; }
-.study-title {
-  font-family: var(--font-display); font-size: clamp(1.5rem, 4vw, 2.5rem);
-  color: var(--accent); text-shadow: 0 0 20px var(--accent-glow);
-}
-.study-subtitle { color: var(--text-muted); font-size: 0.85rem; letter-spacing: 0.1em; margin-top: -4px; }
-
-.study-range { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 500px; }
+.study-screen { gap: 10px; padding: 16px; justify-content: flex-start; padding-top: calc(env(safe-area-inset-top, 8px) + 54px); }
+.study-range { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 500px; }
 .study-range-btn {
-  padding: 6px 14px; font-family: var(--font-display); font-size: 0.75rem;
+  padding: 5px 10px; font-family: var(--font-display); font-size: 0.7rem;
   background: var(--btn-bg); color: var(--btn-text); border: 1.5px solid var(--btn-border);
   border-radius: var(--btn-radius); cursor: pointer; transition: all 0.2s; opacity: 0.5;
 }
@@ -404,19 +398,19 @@ body {
 .study-range-btn.active { opacity: 1; border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
 
 /* Chunk display */
-.study-chunk-area { width: 100%; max-width: 500px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.study-chunk-area { width: 100%; max-width: 500px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .study-chunk-card {
   background: var(--leaderboard-bg); border: 1px solid var(--leaderboard-border);
-  border-radius: 12px; padding: 20px; width: 100%; text-align: center;
+  border-radius: 10px; padding: 14px; width: 100%; text-align: center;
   animation: study-chunk-in 0.3s ease-out;
 }
-.study-chunk-label { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px; }
+.study-chunk-label { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
 .study-chunk-digits {
-  font-family: var(--font-display); font-size: clamp(1.6rem, 4.5vw, 2.6rem);
-  color: var(--text); letter-spacing: 0.12em; word-break: break-all; line-height: 1.5;
+  font-family: var(--font-display); font-size: clamp(1.4rem, 4vw, 2.2rem);
+  color: var(--text); letter-spacing: 0.1em; word-break: break-all; line-height: 1.4;
 }
 .study-chunk-digits .study-group {
-  display: inline-block; margin: 0 5px; padding: 4px 2px;
+  display: inline-block; margin: 0 4px; padding: 3px 2px;
   border-bottom: 2px solid transparent; transition: all 0.2s;
 }
 .study-chunk-digits .study-group:hover { border-bottom-color: var(--accent); }
@@ -428,19 +422,19 @@ body {
 }
 .study-chunk-digits.covered .study-group.revealed { color: var(--text); background: transparent; }
 
-.study-nav { display: flex; gap: 12px; align-items: center; }
+.study-nav { display: flex; gap: 10px; align-items: center; }
 .study-nav-btn {
-  padding: 8px 20px; font-family: var(--font-display); font-size: 1rem;
+  padding: 6px 16px; font-family: var(--font-display); font-size: 0.9rem;
   background: var(--btn-bg); color: var(--btn-text); border: 1.5px solid var(--btn-border);
   border-radius: var(--btn-radius); cursor: pointer; transition: all 0.2s;
 }
 .study-nav-btn:hover { background: var(--btn-hover); box-shadow: var(--btn-shadow); }
 .study-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-.study-page-info { color: var(--text-muted); font-size: 0.8rem; min-width: 60px; text-align: center; }
+.study-page-info { color: var(--text-muted); font-size: 0.75rem; min-width: 50px; text-align: center; }
 
-.study-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.study-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; }
 .study-toggle-btn {
-  padding: 7px 16px; font-family: var(--font-display); font-size: 0.8rem;
+  padding: 6px 14px; font-family: var(--font-display); font-size: 0.75rem;
   background: transparent; color: var(--accent); border: 1.5px solid var(--accent);
   border-radius: var(--btn-radius); cursor: pointer; transition: all 0.2s; opacity: 0.7;
 }
@@ -448,7 +442,7 @@ body {
 .study-toggle-btn.active { background: var(--btn-active); opacity: 1; }
 
 .study-back-btn {
-  padding: 10px 28px; font-family: var(--font-display); font-size: 0.9rem;
+  padding: 8px 24px; font-family: var(--font-display); font-size: 0.8rem;
   background: transparent; color: var(--accent); border: 2px solid var(--accent);
   border-radius: var(--btn-radius); cursor: pointer; letter-spacing: 0.1em;
   text-transform: uppercase; transition: all 0.25s; opacity: 0.7;
@@ -458,19 +452,19 @@ body {
 /* ===== Practice Mode (inside Study) ===== */
 .practice-area {
   width: 100%; max-width: 500px;
-  display: none; flex-direction: column; align-items: center; gap: 14px;
+  display: none; flex-direction: column; align-items: center; gap: 8px;
 }
 .practice-area.active { display: flex; }
 
 .practice-teleprompter {
   width: 100%; background: var(--leaderboard-bg); border: 1px solid var(--leaderboard-border);
-  border-radius: 12px; padding: 16px 12px; position: relative; overflow: hidden;
-  min-height: 120px; display: flex; align-items: center; justify-content: center;
+  border-radius: 10px; padding: 12px 10px; position: relative; overflow: hidden;
+  min-height: 80px; display: flex; align-items: center; justify-content: center;
 }
 
 .practice-digits {
-  font-family: var(--font-display); font-size: clamp(1.4rem, 4vw, 2.2rem);
-  line-height: 1.6; text-align: center; word-break: break-all;
+  font-family: var(--font-display); font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+  line-height: 1.5; text-align: center; word-break: break-all;
 }
 
 .practice-digit {
@@ -504,9 +498,9 @@ body {
   font-size: 0.8rem; color: var(--text-muted); letter-spacing: 0.1em;
 }
 
-.practice-numpad-container { width: 100%; max-width: 320px; }
-.practice-numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.practice-numpad .numpad-btn { aspect-ratio: 1.3; font-size: clamp(1.2rem, 3.5vw, 1.6rem); }
+.practice-numpad-container { width: 100%; max-width: 280px; }
+.practice-numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.practice-numpad .numpad-btn { aspect-ratio: 1.2; font-size: clamp(1.1rem, 3vw, 1.4rem); }
 
 .practice-restart-btn {
   padding: 6px 18px; font-family: var(--font-display); font-size: 0.75rem;
@@ -540,10 +534,22 @@ body {
 .brand-logo-xs svg { width: 100%; height: 100%; display: block; }
 
 /* ===== Responsive ===== */
+@media (max-height: 700px) {
+  .brand-logo { width: 56px; height: 56px; margin-bottom: 8px; }
+  .start-screen .title { font-size: clamp(2rem, 6vw, 3rem); margin-bottom: 4px; }
+  .start-screen .subtitle { margin-bottom: 20px; }
+  .theme-selector { gap: 8px; margin-bottom: 20px; }
+  .theme-btn { padding: 10px 8px; }
+  .practice-teleprompter { min-height: 60px; padding: 8px; }
+  .practice-numpad-container { max-width: 240px; }
+  .practice-numpad .numpad-btn { aspect-ratio: 1.1; }
+  .study-screen { gap: 8px; }
+}
 @media (max-height: 600px) {
   .pi-display { max-height: 25vh; }
   .numpad-btn { aspect-ratio: 1.5; }
-  .gameover-screen, .study-screen { padding-top: 40px; }
+  .gameover-screen { padding-top: calc(env(safe-area-inset-top, 8px) + 44px); }
+  .study-screen { padding-top: calc(env(safe-area-inset-top, 8px) + 44px); }
 }
 @media (min-width: 768px) {
   .numpad-container { max-width: 380px; }
@@ -646,10 +652,6 @@ body {
 
 <!-- ===== Study Screen ===== -->
 <div id="study-screen" class="screen study-screen">
-  <div class="brand-logo-sm" id="logo-study"></div>
-  <h2 class="study-title">Study Pi</h2>
-  <p class="study-subtitle">Learn &middot; Cover &middot; Practice</p>
-
   <div class="study-range" id="study-range"></div>
 
   <!-- Read / Cover view -->
@@ -727,7 +729,7 @@ function createLogoSVG() {
 }
 
 function placeBrandLogos() {
-  [['logo-start','brand-logo'], ['logo-gameover','brand-logo-sm'], ['logo-study','brand-logo-sm'], ['logo-modal','brand-logo-xs']].forEach(([id, cls]) => {
+  [['logo-start','brand-logo'], ['logo-gameover','brand-logo-sm'], ['logo-modal','brand-logo-xs']].forEach(([id, cls]) => {
     const el = document.getElementById(id);
     if (el) { el.className = cls; el.style.display = cls === 'brand-logo-xs' ? 'inline-block' : ''; el.innerHTML = ''; el.appendChild(createLogoSVG()); }
   });
