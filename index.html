@@ -45,53 +45,56 @@
   --transition-speed: 0.3s;
 }
 
+/* --- Neural Network: dark cyberpunk, neon scan lines, circuit traces --- */
 [data-theme="neural"] {
-  --bg: #0a0a0f; --bg-secondary: #12121a; --text: #e0e0e0; --text-muted: #666;
-  --accent: #00e5ff; --accent-secondary: #ff00e5; --accent-glow: rgba(0, 229, 255, 0.4);
-  --btn-bg: #1a1a2e; --btn-border: #00e5ff; --btn-text: #00e5ff;
+  --bg: #06060c; --bg-secondary: #0e0e1a; --text: #e0e0e0; --text-muted: #555;
+  --accent: #00e5ff; --accent-secondary: #ff00e5; --accent-glow: rgba(0, 229, 255, 0.45);
+  --btn-bg: linear-gradient(145deg, #141428, #0c0c1e); --btn-border: #00e5ff; --btn-text: #00e5ff;
   --btn-hover: rgba(0, 229, 255, 0.15); --btn-active: rgba(0, 229, 255, 0.3);
-  --btn-shadow: 0 0 15px rgba(0, 229, 255, 0.3); --btn-radius: 8px;
+  --btn-shadow: 0 0 15px rgba(0, 229, 255, 0.3), inset 0 1px 0 rgba(0,229,255,0.1); --btn-radius: 6px;
   --font-primary: 'Courier New', 'Consolas', monospace; --font-display: 'Courier New', 'Consolas', monospace;
   --particle-color: #00e5ff; --success-color: #00ff88; --error-color: #ff3366;
-  --leaderboard-bg: rgba(0, 229, 255, 0.05); --leaderboard-border: rgba(0, 229, 255, 0.2);
+  --leaderboard-bg: rgba(0, 229, 255, 0.04); --leaderboard-border: rgba(0, 229, 255, 0.15);
 }
 
+/* --- Blueprint: technical drawing, precise grid, drafting feel --- */
 [data-theme="blueprint"] {
-  --bg: #0d1b2a; --bg-secondary: #1b2838; --text: #c8d6e5; --text-muted: #576574;
-  --accent: #48dbfb; --accent-secondary: #feca57; --accent-glow: rgba(72, 219, 251, 0.3);
-  --btn-bg: #1b2838; --btn-border: #48dbfb; --btn-text: #c8d6e5;
-  --btn-hover: rgba(72, 219, 251, 0.1); --btn-active: rgba(72, 219, 251, 0.2);
-  --btn-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); --btn-radius: 4px;
+  --bg: #0a1628; --bg-secondary: #122240; --text: #c0d4e8; --text-muted: #4a6a8a;
+  --accent: #4ac0e8; --accent-secondary: #e8c84a; --accent-glow: rgba(74, 192, 232, 0.25);
+  --btn-bg: linear-gradient(180deg, #162a48, #0e1e36); --btn-border: rgba(74, 192, 232, 0.5); --btn-text: #c0d4e8;
+  --btn-hover: rgba(74, 192, 232, 0.08); --btn-active: rgba(74, 192, 232, 0.18);
+  --btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(74,192,232,0.08); --btn-radius: 3px;
   --font-primary: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   --font-display: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-  --particle-color: #48dbfb; --success-color: #1dd1a1; --error-color: #ee5a24;
-  --leaderboard-bg: rgba(72, 219, 251, 0.05); --leaderboard-border: rgba(72, 219, 251, 0.15);
+  --particle-color: #4ac0e8; --success-color: #3ae89a; --error-color: #e85a2a;
+  --leaderboard-bg: rgba(74, 192, 232, 0.04); --leaderboard-border: rgba(74, 192, 232, 0.12);
 }
 
+/* --- Gallery: minimalist museum, soft geometry, elegant glassmorphism --- */
 [data-theme="gallery"] {
-  --bg: #fafafa; --bg-secondary: #ffffff; --text: #1a1a1a; --text-muted: #999;
-  --accent: #333333; --accent-secondary: #e74c3c; --accent-glow: rgba(0, 0, 0, 0.08);
-  --btn-bg: rgba(255, 255, 255, 0.7); --btn-border: rgba(0, 0, 0, 0.12); --btn-text: #1a1a1a;
-  --btn-hover: rgba(0, 0, 0, 0.04); --btn-active: rgba(0, 0, 0, 0.08);
-  --btn-shadow: 0 8px 32px rgba(0, 0, 0, 0.08); --btn-radius: 16px;
+  --bg: #f5f0eb; --bg-secondary: rgba(255,255,255,0.85); --text: #1a1a1a; --text-muted: #888;
+  --accent: #2c2c2c; --accent-secondary: #c0392b; --accent-glow: rgba(0, 0, 0, 0.06);
+  --btn-bg: rgba(255, 255, 255, 0.55); --btn-border: rgba(0, 0, 0, 0.08); --btn-text: #1a1a1a;
+  --btn-hover: rgba(255, 255, 255, 0.8); --btn-active: rgba(0, 0, 0, 0.06);
+  --btn-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0,0,0,0.04); --btn-radius: 14px;
   --font-primary: 'Georgia', 'Times New Roman', serif;
   --font-display: 'Georgia', 'Times New Roman', serif;
-  --particle-color: #333; --success-color: #2ecc71; --error-color: #e74c3c;
-  --leaderboard-bg: rgba(0, 0, 0, 0.02); --leaderboard-border: rgba(0, 0, 0, 0.08);
+  --particle-color: #c0392b; --success-color: #27ae60; --error-color: #c0392b;
+  --leaderboard-bg: rgba(255, 255, 255, 0.5); --leaderboard-border: rgba(0, 0, 0, 0.06);
 }
 
+/* --- Orbital: deep space, nebula clouds, glowing celestial --- */
 [data-theme="orbital"] {
-  --bg: #05051e; --bg-secondary: #0a0a30; --text: #d4d4ff; --text-muted: #6666aa;
+  --bg: #030312; --bg-secondary: #08082a; --text: #cccef8; --text-muted: #5558a0;
   --accent: #7c5cfc; --accent-secondary: #fc5c7c; --accent-glow: rgba(124, 92, 252, 0.4);
-  --btn-bg: radial-gradient(circle at 30% 30%, #2a1f5e, #15103a);
-  --btn-border: rgba(124, 92, 252, 0.5); --btn-text: #d4d4ff;
-  --btn-hover: rgba(124, 92, 252, 0.2); --btn-active: rgba(124, 92, 252, 0.35);
-  --btn-shadow: 0 0 20px rgba(124, 92, 252, 0.3), inset 0 0 15px rgba(124, 92, 252, 0.1);
+  --btn-bg: radial-gradient(circle at 35% 35%, #261e5e, #110d30); --btn-border: rgba(124, 92, 252, 0.4); --btn-text: #cccef8;
+  --btn-hover: rgba(124, 92, 252, 0.15); --btn-active: rgba(124, 92, 252, 0.3);
+  --btn-shadow: 0 0 18px rgba(124, 92, 252, 0.25), inset 0 0 12px rgba(124, 92, 252, 0.08);
   --btn-radius: 50%;
   --font-primary: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   --font-display: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   --particle-color: #7c5cfc; --success-color: #5cfc7c; --error-color: #fc5c7c;
-  --leaderboard-bg: rgba(124, 92, 252, 0.05); --leaderboard-border: rgba(124, 92, 252, 0.2);
+  --leaderboard-bg: rgba(124, 92, 252, 0.04); --leaderboard-border: rgba(124, 92, 252, 0.15);
 }
 
 /* ===== Animations ===== */
@@ -139,6 +142,13 @@
   from { opacity: 0; transform: scale(0.92) translateY(10px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
+@keyframes neural-scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+@keyframes orbital-twinkle {
+  0%, 100% { opacity: 0.3; } 50% { opacity: 1; }
+}
 
 .shake-correct { animation: screen-shake-light 0.15s ease-out; }
 .shake-wrong { animation: screen-shake-heavy 0.4s ease-out; }
@@ -155,29 +165,117 @@ body {
   position: relative;
 }
 
-[data-theme="blueprint"] body::before {
-  content: ''; position: fixed; inset: 0;
-  background-image: linear-gradient(rgba(72, 219, 251, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(72, 219, 251, 0.05) 1px, transparent 1px);
-  background-size: 40px 40px; pointer-events: none; z-index: 0;
-}
-[data-theme="orbital"] body::before {
-  content: ''; position: fixed; inset: 0;
+/* --- Neural: scan lines + circuit board traces + hex grid --- */
+[data-theme="neural"] body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
   background:
-    radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.6), transparent),
-    radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,0.4), transparent),
-    radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.5), transparent),
-    radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.3), transparent),
-    radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.5), transparent),
-    radial-gradient(1.5px 1.5px at 15% 55%, rgba(124,92,252,0.6), transparent),
-    radial-gradient(1.5px 1.5px at 85% 25%, rgba(252,92,124,0.5), transparent);
-  pointer-events: none; z-index: 0;
+    /* horizontal scan lines */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 229, 255, 0.015) 2px,
+      rgba(0, 229, 255, 0.015) 4px
+    ),
+    /* vertical circuit traces */
+    linear-gradient(90deg, transparent 49.5%, rgba(0,229,255,0.03) 49.5%, rgba(0,229,255,0.03) 50.5%, transparent 50.5%),
+    linear-gradient(0deg, transparent 49.5%, rgba(0,229,255,0.03) 49.5%, rgba(0,229,255,0.03) 50.5%, transparent 50.5%);
+  background-size: 4px 4px, 80px 80px, 80px 80px;
+}
+[data-theme="neural"] body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    /* corner glow accents */
+    radial-gradient(ellipse at 0% 0%, rgba(0,229,255,0.08), transparent 40%),
+    radial-gradient(ellipse at 100% 100%, rgba(255,0,229,0.06), transparent 40%);
+}
+
+/* --- Blueprint: precise drafting grid + dimension markers + compass rose --- */
+[data-theme="blueprint"] body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    /* fine grid */
+    linear-gradient(rgba(74, 192, 232, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74, 192, 232, 0.04) 1px, transparent 1px),
+    /* major grid */
+    linear-gradient(rgba(74, 192, 232, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74, 192, 232, 0.08) 1px, transparent 1px),
+    /* diagonal cross-hatch */
+    repeating-linear-gradient(45deg, transparent, transparent 80px, rgba(74,192,232,0.02) 80px, rgba(74,192,232,0.02) 81px),
+    repeating-linear-gradient(-45deg, transparent, transparent 80px, rgba(74,192,232,0.02) 80px, rgba(74,192,232,0.02) 81px);
+  background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px, 113px 113px, 113px 113px;
+}
+[data-theme="blueprint"] body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  /* vignette + compass circle hint */
+  background:
+    radial-gradient(circle at 50% 50%, transparent 30%, rgba(6,14,26,0.4) 100%),
+    radial-gradient(circle at 90% 90%, rgba(74,192,232,0.04), transparent 20%);
+}
+
+/* --- Gallery: abstract geometric shapes + warm grain + color washes --- */
+[data-theme="gallery"] body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    /* large decorative circle */
+    radial-gradient(circle at 85% 20%, rgba(192,57,43,0.06) 0%, transparent 25%),
+    /* offset circle */
+    radial-gradient(circle at 10% 80%, rgba(41,128,185,0.05) 0%, transparent 30%),
+    /* subtle diagonal stripes */
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 40px,
+      rgba(0,0,0,0.008) 40px,
+      rgba(0,0,0,0.008) 41px
+    ),
+    /* warm paper texture gradient */
+    linear-gradient(170deg, #f5f0eb 0%, #ede5db 40%, #f0ebe4 60%, #f5f0eb 100%);
 }
 [data-theme="gallery"] body::after {
-  content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
-  background: radial-gradient(ellipse at 30% 50%, rgba(231,76,60,0.03), transparent 50%),
-              radial-gradient(ellipse at 70% 50%, rgba(52,152,219,0.03), transparent 50%);
-  pointer-events: none; z-index: 0;
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  /* film grain overlay */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* --- Orbital: star field + nebula clouds + orbital ring hint --- */
+[data-theme="orbital"] body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    /* bright stars */
+    radial-gradient(1px 1px at 7% 12%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1px 1px at 23% 67%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 44% 8%, rgba(200,200,255,0.8), transparent),
+    radial-gradient(1px 1px at 61% 34%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 82% 78%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 93% 18%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1px 1px at 16% 92%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 38% 45%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 72% 58%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1.5px 1.5px at 55% 88%, rgba(200,180,255,0.6), transparent),
+    /* colored stars */
+    radial-gradient(2px 2px at 12% 48%, rgba(124,92,252,0.8), transparent),
+    radial-gradient(2px 2px at 88% 32%, rgba(252,92,124,0.6), transparent),
+    radial-gradient(2px 2px at 50% 72%, rgba(92,252,200,0.5), transparent),
+    /* dim star dust layer */
+    radial-gradient(0.5px 0.5px at 5% 30%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(0.5px 0.5px at 15% 10%, rgba(255,255,255,0.25), transparent),
+    radial-gradient(0.5px 0.5px at 35% 25%, rgba(255,255,255,0.2), transparent),
+    radial-gradient(0.5px 0.5px at 65% 20%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(0.5px 0.5px at 78% 50%, rgba(255,255,255,0.2), transparent),
+    radial-gradient(0.5px 0.5px at 95% 65%, rgba(255,255,255,0.25), transparent),
+    radial-gradient(0.5px 0.5px at 42% 95%, rgba(255,255,255,0.3), transparent);
+}
+[data-theme="orbital"] body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    /* nebula clouds */
+    radial-gradient(ellipse at 20% 30%, rgba(124,92,252,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(252,92,124,0.06) 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 50%, rgba(92,124,252,0.04) 0%, transparent 60%),
+    /* orbital ring arc hint */
+    conic-gradient(from 200deg at 50% 55%, transparent 0deg, rgba(124,92,252,0.04) 30deg, transparent 60deg, transparent 170deg, rgba(252,92,124,0.03) 200deg, transparent 230deg);
 }
 
 /* ===== Top Toolbar ===== */
@@ -289,6 +387,140 @@ body {
 .numpad-btn.wrong-flash { border-color: var(--error-color) !important; box-shadow: 0 0 20px rgba(255, 51, 102, 0.5) !important; background: rgba(255, 51, 102, 0.2) !important; }
 .numpad-btn.zero-btn { grid-column: 2; }
 .numpad.combo-active .numpad-btn { animation: pulse-glow 0.8s ease-in-out infinite; }
+
+/* ===== Theme-Specific Overrides ===== */
+
+/* Neural: beveled mechanical keys, inner glow line */
+[data-theme="neural"] .numpad-btn {
+  border-width: 1px;
+  box-shadow: inset 0 1px 0 rgba(0,229,255,0.12), 0 2px 6px rgba(0,0,0,0.5);
+}
+[data-theme="neural"] .numpad-btn::after {
+  content: ''; position: absolute; bottom: 0; left: 10%; right: 10%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,229,255,0.3), transparent);
+}
+[data-theme="neural"] .pi-prefix { font-weight: bold; }
+[data-theme="neural"] .start-screen .title {
+  text-shadow: 0 0 40px rgba(0,229,255,0.5), 0 0 80px rgba(255,0,229,0.2);
+}
+
+/* Blueprint: extruded technical buttons, precise borders, hatched active state */
+[data-theme="blueprint"] .numpad-btn {
+  border-width: 1.5px;
+  text-transform: none;
+  font-weight: 600;
+  box-shadow: 0 2px 0 rgba(74,192,232,0.15), inset 0 1px 0 rgba(74,192,232,0.06);
+}
+[data-theme="blueprint"] .numpad-btn:active,
+[data-theme="blueprint"] .numpad-btn.pressing {
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+  transform: translateY(1px);
+}
+[data-theme="blueprint"] .pi-display { letter-spacing: 0.05em; }
+[data-theme="blueprint"] .start-screen .title { letter-spacing: 0.15em; font-weight: 700; }
+[data-theme="blueprint"] .theme-btn { border-width: 1.5px; }
+
+/* Gallery: glassmorphism buttons, soft diffused shadows, elegant feel */
+[data-theme="gallery"] .numpad-btn {
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-width: 1px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+  font-weight: 400; letter-spacing: 0.02em;
+}
+[data-theme="gallery"] .numpad-btn:hover {
+  box-shadow: 0 6px 24px rgba(0,0,0,0.06);
+}
+[data-theme="gallery"] .pi-display { font-style: italic; }
+[data-theme="gallery"] .pi-prefix { font-style: italic; }
+[data-theme="gallery"] .start-screen .title {
+  font-style: italic; letter-spacing: 0.05em;
+  text-shadow: none; color: #2c2c2c;
+}
+[data-theme="gallery"] .theme-btn {
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border-width: 1px;
+}
+[data-theme="gallery"] .leaderboard,
+[data-theme="gallery"] .autopsy,
+[data-theme="gallery"] .gameover-leaderboard,
+[data-theme="gallery"] .study-chunk-card,
+[data-theme="gallery"] .practice-teleprompter,
+[data-theme="gallery"] .modal {
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  background: rgba(255,255,255,0.55);
+}
+
+/* Orbital: spherical buttons with inner light, digit floating effect */
+[data-theme="orbital"] .numpad-btn {
+  box-shadow:
+    0 0 16px rgba(124,92,252,0.15),
+    inset 0 -4px 10px rgba(0,0,0,0.3),
+    inset 0 4px 8px rgba(124,92,252,0.1);
+  border-width: 1px;
+}
+[data-theme="orbital"] .numpad-btn:hover {
+  box-shadow:
+    0 0 24px rgba(124,92,252,0.3),
+    inset 0 -4px 10px rgba(0,0,0,0.3),
+    inset 0 4px 10px rgba(124,92,252,0.15);
+}
+[data-theme="orbital"] .start-screen .title {
+  text-shadow: 0 0 30px rgba(124,92,252,0.5), 0 0 60px rgba(252,92,124,0.2);
+}
+[data-theme="orbital"] .pi-digit.latest {
+  text-shadow: 0 0 12px var(--success-color), 0 0 24px var(--success-color);
+}
+[data-theme="orbital"] .theme-btn {
+  border-radius: 20px;
+}
+
+/* ===== Theme Ambient Overlay ===== */
+.theme-overlay {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  opacity: 0; transition: opacity 0.5s;
+}
+/* Neural: sweeping scan line */
+[data-theme="neural"] .theme-overlay {
+  opacity: 1;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 229, 255, 0.03) 48%,
+    rgba(0, 229, 255, 0.06) 50%,
+    rgba(0, 229, 255, 0.03) 52%,
+    transparent 100%
+  );
+  background-size: 100% 30%;
+  animation: neural-scanline 8s linear infinite;
+}
+/* Orbital: subtle pulsing nebula */
+[data-theme="orbital"] .theme-overlay {
+  opacity: 1;
+  background: radial-gradient(ellipse at 30% 40%, rgba(124,92,252,0.06), transparent 50%);
+  animation: orbital-twinkle 6s ease-in-out infinite;
+}
+
+/* ===== Theme Button Previews ===== */
+.theme-btn[data-theme-choice="neural"] {
+  border-color: #00e5ff;
+  background: linear-gradient(135deg, #0a0a0f 60%, #1a1a2e);
+  color: #00e5ff;
+}
+.theme-btn[data-theme-choice="blueprint"] {
+  border-color: #4ac0e8;
+  background: linear-gradient(135deg, #0a1628 60%, #122240);
+  color: #c0d4e8;
+}
+.theme-btn[data-theme-choice="gallery"] {
+  border-color: rgba(0,0,0,0.15);
+  background: linear-gradient(135deg, #f5f0eb 60%, #ede5db);
+  color: #1a1a1a;
+}
+.theme-btn[data-theme-choice="orbital"] {
+  border-color: rgba(124,92,252,0.5);
+  background: linear-gradient(135deg, #030312 60%, #110d30);
+  color: #cccef8;
+}
 
 /* ===== Particle Canvas ===== */
 #particle-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
@@ -559,6 +791,9 @@ body {
 </head>
 
 <body data-theme="neural">
+
+<!-- Theme ambient overlay (Neural scanline) -->
+<div id="theme-overlay" class="theme-overlay"></div>
 
 <!-- Top Toolbar -->
 <div class="toolbar">
