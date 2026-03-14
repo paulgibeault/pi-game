@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Pi Game</title>
+
+<!-- PWA / iOS Home Screen -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pi Game">
+<meta name="theme-color" content="#0a0a0f">
+<link rel="manifest" href="manifest.json">
+
+<!-- Inline SVG Pi Logo (used as favicon + apple-touch-icon via JS) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2300e5ff'/%3E%3Cstop offset='100%25' stop-color='%23ff00e5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='108' fill='%230a0a0f'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-family='Georgia,serif' font-size='320' font-weight='bold' fill='url(%23g)'%3E%CF%80%3C/text%3E%3Ctext x='256' y='440' text-anchor='middle' font-family='Courier New,monospace' font-size='72' fill='%2300e5ff' opacity='0.6'%3E3.14159%3C/text%3E%3C/svg%3E">
+<style>
+/* ===== CSS Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121a;
+  --text: #e0e0e0;
+  --text-muted: #888;
+  --accent: #00e5ff;
+  --accent-secondary: #ff00e5;
+  --accent-glow: rgba(0, 229, 255, 0.4);
+  --btn-bg: #1a1a2e;
+  --btn-border: #00e5ff;
+  --btn-text: #00e5ff;
+  --btn-hover: rgba(0, 229, 255, 0.15);
+  --btn-active: rgba(0, 229, 255, 0.3);
+  --btn-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+  --btn-radius: 8px;
+  --font-primary: 'Courier New', 'Consolas', monospace;
+  --font-display: 'Courier New', 'Consolas', monospace;
+  --pi-font-size: clamp(2rem, 5vw, 3.5rem);
+  --pad-gap: 8px;
+  --particle-color: var(--accent);
+  --success-color: #00ff88;
+  --error-color: #ff3366;
+  --leaderboard-bg: rgba(0, 229, 255, 0.05);
+  --leaderboard-border: rgba(0, 229, 255, 0.2);
+  --transition-speed: 0.3s;
+}
+
+[data-theme="neural"] {
+  --bg: #0a0a0f; --bg-secondary: #12121a; --text: #e0e0e0; --text-muted: #666;
+  --accent: #00e5ff; --accent-secondary: #ff00e5; --accent-glow: rgba(0, 229, 255, 0.4);
+  --btn-bg: #1a1a2e; --btn-border: #00e5ff; --btn-text: #00e5ff;
+  --btn-hover: rgba(0, 229, 255, 0.15); --btn-active: rgba(0, 229, 255, 0.3);
+  --btn-shadow: 0 0 15px rgba(0, 229, 255, 0.3); --btn-radius: 8px;
+  --font-primary: 'Courier New', 'Consolas', monospace; --font-display: 'Courier New', 'Consolas', monospace;
+  --particle-color: #00e5ff; --success-color: #00ff88; --error-color: #ff3366;
+  --leaderboard-bg: rgba(0, 229, 255, 0.05); --leaderboard-border: rgba(0, 229, 255, 0.2);
+}
+
+[data-theme="blueprint"] {
+  --bg: #0d1b2a; --bg-secondary: #1b2838; --text: #c8d6e5; --text-muted: #576574;
+  --accent: #48dbfb; --accent-secondary: #feca57; --accent-glow: rgba(72, 219, 251, 0.3);
+  --btn-bg: #1b2838; --btn-border: #48dbfb; --btn-text: #c8d6e5;
+  --btn-hover: rgba(72, 219, 251, 0.1); --btn-active: rgba(72, 219, 251, 0.2);
+  --btn-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); --btn-radius: 4px;
+  --font-primary: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --particle-color: #48dbfb; --success-color: #1dd1a1; --error-color: #ee5a24;
+  --leaderboard-bg: rgba(72, 219, 251, 0.05); --leaderboard-border: rgba(72, 219, 251, 0.15);
+}
+
+[data-theme="gallery"] {
+  --bg: #fafafa; --bg-secondary: #ffffff; --text: #1a1a1a; --text-muted: #999;
+  --accent: #333333; --accent-secondary: #e74c3c; --accent-glow: rgba(0, 0, 0, 0.08);
+  --btn-bg: rgba(255, 255, 255, 0.7); --btn-border: rgba(0, 0, 0, 0.12); --btn-text: #1a1a1a;
+  --btn-hover: rgba(0, 0, 0, 0.04); --btn-active: rgba(0, 0, 0, 0.08);
+  --btn-shadow: 0 8px 32px rgba(0, 0, 0, 0.08); --btn-radius: 16px;
+  --font-primary: 'Georgia', 'Times New Roman', serif;
+  --font-display: 'Georgia', 'Times New Roman', serif;
+  --particle-color: #333; --success-color: #2ecc71; --error-color: #e74c3c;
+  --leaderboard-bg: rgba(0, 0, 0, 0.02); --leaderboard-border: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="orbital"] {
+  --bg: #05051e; --bg-secondary: #0a0a30; --text: #d4d4ff; --text-muted: #6666aa;
+  --accent: #7c5cfc; --accent-secondary: #fc5c7c; --accent-glow: rgba(124, 92, 252, 0.4);
+  --btn-bg: radial-gradient(circle at 30% 30%, #2a1f5e, #15103a);
+  --btn-border: rgba(124, 92, 252, 0.5); --btn-text: #d4d4ff;
+  --btn-hover: rgba(124, 92, 252, 0.2); --btn-active: rgba(124, 92, 252, 0.35);
+  --btn-shadow: 0 0 20px rgba(124, 92, 252, 0.3), inset 0 0 15px rgba(124, 92, 252, 0.1);
+  --btn-radius: 50%;
+  --font-primary: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --particle-color: #7c5cfc; --success-color: #5cfc7c; --error-color: #fc5c7c;
+  --leaderboard-bg: rgba(124, 92, 252, 0.05); --leaderboard-border: rgba(124, 92, 252, 0.2);
+}
+
+/* ===== Animations ===== */
+@keyframes screen-shake-light {
+  0%, 100% { transform: translate(0); }
+  25% { transform: translate(-2px, 1px); }
+  50% { transform: translate(2px, -1px); }
+  75% { transform: translate(-1px, 2px); }
+}
+@keyframes screen-shake-heavy {
+  0%, 100% { transform: translate(0); }
+  10% { transform: translate(-8px, 4px); } 20% { transform: translate(8px, -6px); }
+  30% { transform: translate(-6px, 8px); } 40% { transform: translate(6px, -4px); }
+  50% { transform: translate(-4px, 6px); } 60% { transform: translate(4px, -8px); }
+  70% { transform: translate(-8px, 4px); } 80% { transform: translate(6px, -2px); }
+  90% { transform: translate(-2px, 6px); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px var(--accent-glow); }
+  50% { box-shadow: 0 0 25px var(--accent-glow), 0 0 50px var(--accent-glow); }
+}
+@keyframes digit-pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes btn-press {
+  0% { transform: scale(1); } 50% { transform: scale(0.92); } 100% { transform: scale(1); }
+}
+@keyframes orbital-float {
+  0% { transform: translateY(0); } 50% { transform: translateY(-4px); } 100% { transform: translateY(0); }
+}
+@keyframes autopsy-reveal {
+  0% { opacity: 0; transform: translateY(8px) scale(0.7); }
+  60% { transform: translateY(-2px) scale(1.1); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes autopsy-cursor-blink {
+  0%, 100% { opacity: 1; } 50% { opacity: 0; }
+}
+@keyframes study-chunk-in {
+  from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); }
+}
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.92) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.shake-correct { animation: screen-shake-light 0.15s ease-out; }
+.shake-wrong { animation: screen-shake-heavy 0.4s ease-out; }
+
+/* ===== Body & Layout ===== */
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  font-family: var(--font-primary);
+  background: var(--bg); color: var(--text);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100dvh;
+  transition: background var(--transition-speed), color var(--transition-speed);
+  position: relative;
+}
+
+[data-theme="blueprint"] body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image: linear-gradient(rgba(72, 219, 251, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(72, 219, 251, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px; pointer-events: none; z-index: 0;
+}
+[data-theme="orbital"] body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 15% 55%, rgba(124,92,252,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 85% 25%, rgba(252,92,124,0.5), transparent);
+  pointer-events: none; z-index: 0;
+}
+[data-theme="gallery"] body::after {
+  content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+  background: radial-gradient(ellipse at 30% 50%, rgba(231,76,60,0.03), transparent 50%),
+              radial-gradient(ellipse at 70% 50%, rgba(52,152,219,0.03), transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ===== Top Toolbar ===== */
+.toolbar {
+  position: fixed; top: 12px; right: 12px; z-index: 20;
+  display: flex; gap: 8px; align-items: center;
+}
+
+.toolbar-btn {
+  background: var(--btn-bg); border: 1.5px solid var(--btn-border);
+  border-radius: var(--btn-radius); color: var(--btn-text);
+  font-size: 1.1rem; width: 42px; height: 42px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; opacity: 0.6;
+  font-family: var(--font-display);
+}
+.toolbar-btn:hover { opacity: 1; box-shadow: var(--btn-shadow); }
+.toolbar-btn.muted { opacity: 0.3; }
+.toolbar-btn.active { opacity: 1; border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+
+/* Pi symbol styling */
+.toolbar-btn .pi-sym { font-size: 1.4rem; font-weight: bold; line-height: 1; }
+
+/* ===== Screens ===== */
+.screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 20px; opacity: 0; pointer-events: none;
+  transition: opacity 0.4s ease; z-index: 1; overflow-y: auto;
+}
+.screen.active { opacity: 1; pointer-events: auto; }
+
+/* ===== Start Screen ===== */
+.start-screen .title {
+  font-family: var(--font-display); font-size: clamp(3rem, 8vw, 5rem);
+  color: var(--accent); text-shadow: 0 0 30px var(--accent-glow);
+  margin-bottom: 8px; letter-spacing: 0.1em;
+}
+.start-screen .subtitle {
+  color: var(--text-muted); font-size: 1rem; margin-bottom: 40px;
+  letter-spacing: 0.15em; text-transform: uppercase;
+}
+
+.theme-selector {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 12px; margin-bottom: 36px; max-width: 360px; width: 100%;
+}
+.theme-btn {
+  padding: 16px 12px; border: 2px solid var(--btn-border); border-radius: 12px;
+  background: var(--btn-bg); color: var(--text); font-family: var(--font-primary);
+  font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
+  text-align: center; position: relative; overflow: hidden;
+}
+.theme-btn::before { content: ''; display: block; font-size: 1.5rem; margin-bottom: 6px; }
+.theme-btn[data-theme-choice="neural"]::before { content: '\26A1'; }
+.theme-btn[data-theme-choice="blueprint"]::before { content: '\1F4D0'; }
+.theme-btn[data-theme-choice="gallery"]::before { content: '\1F3A8'; }
+.theme-btn[data-theme-choice="orbital"]::before { content: '\1FA90'; }
+.theme-btn:hover { transform: translateY(-2px); box-shadow: var(--btn-shadow); }
+.theme-btn.selected { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow), inset 0 0 20px var(--accent-glow); }
+
+.start-btn {
+  padding: 16px 48px; font-family: var(--font-display); font-size: 1.2rem;
+  background: transparent; color: var(--accent); border: 2px solid var(--accent);
+  border-radius: var(--btn-radius); cursor: pointer; letter-spacing: 0.1em;
+  text-transform: uppercase; transition: all 0.25s;
+}
+.start-btn:hover { background: var(--btn-hover); box-shadow: var(--btn-shadow); transform: translateY(-2px); }
+
+/* ===== Game Screen ===== */
+.game-screen { justify-content: space-between; padding: 24px 16px; overflow: hidden; }
+
+.pi-display-container {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 100%; max-width: 600px; min-height: 0;
+}
+.pi-display {
+  font-family: var(--font-display); font-size: var(--pi-font-size); color: var(--text);
+  text-align: center; word-break: break-all; line-height: 1.4; padding: 0 16px;
+  max-height: 40vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--accent) transparent;
+}
+.pi-display::-webkit-scrollbar { width: 4px; }
+.pi-display::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+.pi-prefix { color: var(--accent); text-shadow: 0 0 15px var(--accent-glow); }
+.pi-digit { display: inline-block; animation: digit-pop 0.25s ease-out; }
+.pi-digit.latest { color: var(--success-color); text-shadow: 0 0 10px var(--success-color); }
+[data-theme="orbital"] .pi-digit {
+  animation: digit-pop 0.25s ease-out, orbital-float 3s ease-in-out infinite;
+  animation-delay: 0s, calc(var(--digit-index, 0) * 0.1s);
+}
+
+.digit-counter { font-size: 0.9rem; color: var(--text-muted); margin-top: 12px; letter-spacing: 0.1em; }
+.timer-display { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.05em; }
+
+/* ===== Number Pad ===== */
+.numpad-container { width: 100%; max-width: 340px; padding-bottom: env(safe-area-inset-bottom, 8px); }
+.numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--pad-gap); }
+.numpad-btn {
+  aspect-ratio: 1.2; font-family: var(--font-display); font-size: clamp(1.4rem, 4vw, 2rem);
+  background: var(--btn-bg); color: var(--btn-text); border: 1.5px solid var(--btn-border);
+  border-radius: var(--btn-radius); cursor: pointer; transition: all 0.15s;
+  position: relative; overflow: hidden;
+  user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+}
+.numpad-btn:hover { background: var(--btn-hover); box-shadow: var(--btn-shadow); }
+.numpad-btn:active, .numpad-btn.pressing { animation: btn-press 0.15s ease-out; background: var(--btn-active); }
+.numpad-btn.correct-flash { border-color: var(--success-color) !important; box-shadow: 0 0 20px rgba(0, 255, 136, 0.4) !important; }
+.numpad-btn.wrong-flash { border-color: var(--error-color) !important; box-shadow: 0 0 20px rgba(255, 51, 102, 0.5) !important; background: rgba(255, 51, 102, 0.2) !important; }
+.numpad-btn.zero-btn { grid-column: 2; }
+.numpad.combo-active .numpad-btn { animation: pulse-glow 0.8s ease-in-out infinite; }
+
+/* ===== Particle Canvas ===== */
+#particle-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+
+/* ===== Leaderboard Modal ===== */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 30;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+.modal {
+  background: var(--bg-secondary); border: 1px solid var(--leaderboard-border);
+  border-radius: 16px; padding: 28px 24px; width: 90%; max-width: 400px;
+  animation: modal-in 0.3s ease-out; position: relative;
+}
+.modal-close {
+  position: absolute; top: 12px; right: 14px;
+  background: none; border: none; color: var(--text-muted);
+  font-size: 1.4rem; cursor: pointer; line-height: 1; padding: 4px;
+  transition: color 0.2s;
+}
+.modal-close:hover { color: var(--text); }
+
+.leaderboard h3 {
+  font-family: var(--font-display); color: var(--accent); font-size: 0.85rem;
+  letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 14px; text-align: center;
+}
+.leaderboard-list { list-style: none; }
+.leaderboard-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 4px; border-bottom: 1px solid var(--leaderboard-border); font-size: 0.9rem;
+}
+.leaderboard-item:last-child { border-bottom: none; }
+.leaderboard-rank { color: var(--text-muted); width: 28px; }
+.leaderboard-score { color: var(--accent); font-family: var(--font-display); font-weight: bold; }
+.leaderboard-time { color: var(--text-muted); font-size: 0.8rem; }
+.leaderboard-date { color: var(--text-muted); font-size: 0.75rem; }
+.leaderboard-empty { text-align: center; color: var(--text-muted); padding: 16px; font-style: italic; }
+
+/* ===== Game Over Screen ===== */
+.gameover-screen { gap: 16px; padding: 20px; justify-content: flex-start; padding-top: 60px; }
+.gameover-title {
+  font-family: var(--font-display); font-size: clamp(2rem, 6vw, 3.5rem);
+  color: var(--error-color); text-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
+}
+.gameover-stats { text-align: center; color: var(--text-muted); font-size: 1rem; line-height: 2; }
+.gameover-stats .score-value {
+  font-size: 2.5rem; color: var(--accent); font-family: var(--font-display);
+  display: block; text-shadow: 0 0 15px var(--accent-glow);
+}
+
+/* ===== Autopsy ===== */
+.autopsy {
+  width: 100%; max-width: 500px; background: var(--leaderboard-bg);
+  border: 1px solid var(--leaderboard-border); border-radius: 12px; padding: 16px 20px;
+}
+.autopsy-header {
+  font-family: var(--font-display); color: var(--accent); font-size: 0.8rem;
+  letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px; text-align: center;
+}
+.autopsy-display {
+  font-family: var(--font-display); font-size: clamp(1.2rem, 3vw, 1.8rem);
+  word-break: break-all; line-height: 1.6; text-align: center;
+}
+.autopsy-correct { color: var(--success-color); }
+.autopsy-missed { color: var(--error-color); opacity: 0; display: inline-block; animation: autopsy-reveal 0.3s ease-out forwards; }
+.autopsy-cursor {
+  display: inline-block; width: 2px; height: 1em; background: var(--error-color);
+  vertical-align: text-bottom; margin-left: 1px; animation: autopsy-cursor-blink 0.8s step-end infinite;
+}
+.autopsy-label { display: block; text-align: center; font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; letter-spacing: 0.1em; }
+.autopsy-study-link {
+  display: inline-block; margin-top: 10px; font-size: 0.8rem; color: var(--accent);
+  cursor: pointer; border: none; background: none; font-family: var(--font-primary);
+  letter-spacing: 0.05em; text-decoration: underline; text-underline-offset: 3px;
+  opacity: 0.7; transition: opacity 0.2s;
+}
+.autopsy-study-link:hover { opacity: 1; }
+
+/* Inline leaderboard on game over */
+.gameover-leaderboard {
+  width: 100%; max-width: 380px; background: var(--leaderboard-bg);
+  border: 1px solid var(--leaderboard-border); border-radius: 12px; padding: 16px 20px;
+}
+
+.gameover-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.retry-btn {
+  padding: 12px 36px; font-family: var(--font-display); font-size: 1rem;
+  background: transparent; color: var(--accent); border: 2px solid var(--accent);
+  border-radius: var(--btn-radius); cursor: pointer; letter-spacing: 0.1em;
+  text-transform: uppercase; transition: all 0.25s;
+}
+.retry-btn:hover { background: var(--btn-hover); box-shadow: var(--btn-shadow); transform: translateY(-2px); }
+
+/* ===== Study Screen ===== */
+.study-screen { gap: 16px; padding: 20px; justify-content: flex-start; padding-top: 60px; }
+.study-title {
+  font-family: var(--font-display); font-size: clamp(1.5rem, 4vw, 2.5rem);
+  color: var(--accent); text-shadow: 0 0 20px var(--accent-glow);
+}
+.study-subtitle { color: var(--text-muted); font-size: 0.85rem; letter-spacing: 0.1em; margin-top: -4px; }
+
+.study-range { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 500px; }
+.study-range-btn {
+  padding: 6px 14px; font-family: var(--font-display); font-size: 0.75rem;
+  background: var(--btn-bg); color: var(--btn-text); border: 1.5px solid var(--btn-border);
+  border-radius: var(--btn-radius); cursor: pointer; transition: all 0.2s; opacity: 0.5;
+}
+.study-range-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.study-range-btn.active { opacity: 1; border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+
+/* Chunk display */
+.study-chunk-area { width: 100%; max-width: 500px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.study-chunk-card {
+  background: var(--leaderboard-bg); border: 1px solid var(--leaderboard-border);
+  border-radius: 12px; padding: 20px; width: 100%; text-align: center;
+  animation: study-chunk-in 0.3s ease-out;
+}
+.study-chunk-label { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px; }
+.study-chunk-digits {
+  font-family: var(--font-display); font-size: clamp(1.6rem, 4.5vw, 2.6rem);
+  color: var(--text); letter-spacing: 0.12em; word-break: break-all; line-height: 1.5;
+}
+.study-chunk-digits .study-group {
+  display: inline-block; margin: 0 5px; padding: 4px 2px;
+  border-bottom: 2px solid transparent; transition: all 0.2s;
+}
+.study-chunk-digits .study-group:hover { border-bottom-color: var(--accent); }
+
+/* Cover mode */
+.study-chunk-digits.covered .study-group {
+  color: transparent; background: var(--leaderboard-border); border-radius: 4px;
+  cursor: pointer; transition: all 0.25s;
+}
+.study-chunk-digits.covered .study-group.revealed { color: var(--text); background: transparent; }
+
+.study-nav { display: flex; gap: 12px; align-items: center; }
+.study-nav-btn {
+  padding: 8px 20px; font-family: var(--font-display); font-size: 1rem;
+  background: var(--btn-bg); color: var(--btn-text); border: 1.5px solid var(--btn-border);
+  border-radius: var(--btn-radius); cursor: pointer; transition: all 0.2s;
+}
+.study-nav-btn:hover { background: var(--btn-hover); box-shadow: var(--btn-shadow); }
+.study-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.study-page-info { color: var(--text-muted); font-size: 0.8rem; min-width: 60px; text-align: center; }
+
+.study-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.study-toggle-btn {
+  padding: 7px 16px; font-family: var(--font-display); font-size: 0.8rem;
+  background: transparent; color: var(--accent); border: 1.5px solid var(--accent);
+  border-radius: var(--btn-radius); cursor: pointer; transition: all 0.2s; opacity: 0.7;
+}
+.study-toggle-btn:hover { opacity: 1; }
+.study-toggle-btn.active { background: var(--btn-active); opacity: 1; }
+
+.study-back-btn {
+  padding: 10px 28px; font-family: var(--font-display); font-size: 0.9rem;
+  background: transparent; color: var(--accent); border: 2px solid var(--accent);
+  border-radius: var(--btn-radius); cursor: pointer; letter-spacing: 0.1em;
+  text-transform: uppercase; transition: all 0.25s; opacity: 0.7;
+}
+.study-back-btn:hover { background: var(--btn-hover); box-shadow: var(--btn-shadow); transform: translateY(-2px); opacity: 1; }
+
+/* ===== Practice Mode (inside Study) ===== */
+.practice-area {
+  width: 100%; max-width: 500px;
+  display: none; flex-direction: column; align-items: center; gap: 14px;
+}
+.practice-area.active { display: flex; }
+
+.practice-teleprompter {
+  width: 100%; background: var(--leaderboard-bg); border: 1px solid var(--leaderboard-border);
+  border-radius: 12px; padding: 16px 12px; position: relative; overflow: hidden;
+  min-height: 120px; display: flex; align-items: center; justify-content: center;
+}
+
+.practice-digits {
+  font-family: var(--font-display); font-size: clamp(1.4rem, 4vw, 2.2rem);
+  line-height: 1.6; text-align: center; word-break: break-all;
+}
+
+.practice-digit {
+  display: inline-block; transition: all 0.2s;
+}
+.practice-digit.done {
+  color: var(--success-color); opacity: 0.5;
+}
+.practice-digit.current {
+  color: var(--accent); font-weight: bold;
+  text-shadow: 0 0 12px var(--accent-glow);
+  transform: scale(1.2);
+}
+.practice-digit.upcoming {
+  color: var(--text-muted); opacity: 0.4;
+}
+.practice-digit.far {
+  opacity: 0.15;
+}
+.practice-digit.wrong-highlight {
+  color: var(--error-color) !important;
+  text-shadow: 0 0 10px var(--error-color) !important;
+  opacity: 1 !important;
+}
+
+.practice-digit-separator {
+  display: inline-block; width: 6px;
+}
+
+.practice-progress {
+  font-size: 0.8rem; color: var(--text-muted); letter-spacing: 0.1em;
+}
+
+.practice-numpad-container { width: 100%; max-width: 320px; }
+.practice-numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.practice-numpad .numpad-btn { aspect-ratio: 1.3; font-size: clamp(1.2rem, 3.5vw, 1.6rem); }
+
+.practice-restart-btn {
+  padding: 6px 18px; font-family: var(--font-display); font-size: 0.75rem;
+  background: transparent; color: var(--text-muted); border: 1px solid var(--leaderboard-border);
+  border-radius: var(--btn-radius); cursor: pointer; transition: all 0.2s;
+}
+.practice-restart-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ===== Brand Logo ===== */
+.brand-logo {
+  display: inline-block;
+  width: 80px; height: 80px;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 20px var(--accent-glow));
+  transition: filter 0.3s;
+}
+.brand-logo svg { width: 100%; height: 100%; display: block; }
+.brand-logo-sm {
+  display: inline-block;
+  width: 40px; height: 40px;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 0 10px var(--accent-glow));
+}
+.brand-logo-sm svg { width: 100%; height: 100%; display: block; }
+.brand-logo-xs {
+  display: inline-block;
+  width: 28px; height: 28px;
+  vertical-align: middle;
+  filter: drop-shadow(0 0 8px var(--accent-glow));
+}
+.brand-logo-xs svg { width: 100%; height: 100%; display: block; }
+
+/* ===== Responsive ===== */
+@media (max-height: 600px) {
+  .pi-display { max-height: 25vh; }
+  .numpad-btn { aspect-ratio: 1.5; }
+  .gameover-screen, .study-screen { padding-top: 40px; }
+}
+@media (min-width: 768px) {
+  .numpad-container { max-width: 380px; }
+  .numpad-btn { aspect-ratio: 1; }
+}
+</style>
+</head>
+
+<body data-theme="neural">
+
+<!-- Top Toolbar -->
+<div class="toolbar">
+  <button class="toolbar-btn" id="btn-study" title="Study Pi"><span class="pi-sym">&pi;</span></button>
+  <button class="toolbar-btn" id="btn-leaderboard" title="Leaderboard">&#x1F3C6;</button>
+  <button class="toolbar-btn" id="btn-sound" title="Toggle sound">&#x1F50A;</button>
+</div>
+
+<!-- Leaderboard Modal -->
+<div class="modal-overlay" id="leaderboard-modal">
+  <div class="modal">
+    <button class="modal-close" id="modal-close">&times;</button>
+    <div class="leaderboard">
+      <div style="text-align:center"><div class="brand-logo-xs" id="logo-modal" style="display:inline-block;margin-bottom:8px"></div></div>
+      <h3>Leaderboard</h3>
+      <ul class="leaderboard-list" id="leaderboard-list"></ul>
+    </div>
+  </div>
+</div>
+
+<!-- Particle Canvas -->
+<canvas id="particle-canvas"></canvas>
+
+<!-- ===== Start Screen ===== -->
+<div id="start-screen" class="screen start-screen active">
+  <div class="brand-logo" id="logo-start"></div>
+  <h1 class="title">Pi Game</h1>
+  <p class="subtitle">How far can you go?</p>
+  <div class="theme-selector">
+    <button class="theme-btn selected" data-theme-choice="neural">Neural Network</button>
+    <button class="theme-btn" data-theme-choice="blueprint">Blueprint</button>
+    <button class="theme-btn" data-theme-choice="gallery">Gallery</button>
+    <button class="theme-btn" data-theme-choice="orbital">Orbital</button>
+  </div>
+  <button class="start-btn" id="start-btn">Start Game</button>
+</div>
+
+<!-- ===== Game Screen ===== -->
+<div id="game-screen" class="screen game-screen">
+  <div class="pi-display-container">
+    <div class="pi-display" id="pi-display">
+      <span class="pi-prefix">3.</span><span id="pi-digits"></span>
+    </div>
+    <div class="digit-counter" id="digit-counter">0 digits</div>
+    <div class="timer-display" id="timer-display">0.0s</div>
+  </div>
+  <div class="numpad-container">
+    <div class="numpad" id="numpad">
+      <button class="numpad-btn" data-digit="1">1</button>
+      <button class="numpad-btn" data-digit="2">2</button>
+      <button class="numpad-btn" data-digit="3">3</button>
+      <button class="numpad-btn" data-digit="4">4</button>
+      <button class="numpad-btn" data-digit="5">5</button>
+      <button class="numpad-btn" data-digit="6">6</button>
+      <button class="numpad-btn" data-digit="7">7</button>
+      <button class="numpad-btn" data-digit="8">8</button>
+      <button class="numpad-btn" data-digit="9">9</button>
+      <button class="numpad-btn zero-btn" data-digit="0">0</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Game Over Screen ===== -->
+<div id="gameover-screen" class="screen gameover-screen">
+  <div class="brand-logo-sm" id="logo-gameover"></div>
+  <h2 class="gameover-title">Game Over</h2>
+  <div class="gameover-stats">
+    <span class="score-value" id="final-score">0</span>
+    digits of Pi<br>
+    in <span id="final-time">0.0</span> seconds
+  </div>
+
+  <div class="autopsy" id="autopsy">
+    <div class="autopsy-header">What Came Next</div>
+    <div class="autopsy-display" id="autopsy-display"></div>
+    <span class="autopsy-label" id="autopsy-label"></span>
+    <div style="text-align:center">
+      <button class="autopsy-study-link" id="autopsy-study-link">Practice this section</button>
+    </div>
+  </div>
+
+  <div class="gameover-leaderboard">
+    <h3 style="font-family:var(--font-display);color:var(--accent);font-size:0.8rem;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:10px;text-align:center">Leaderboard</h3>
+    <ul class="leaderboard-list" id="gameover-leaderboard-list"></ul>
+  </div>
+
+  <div class="gameover-actions">
+    <button class="retry-btn" id="retry-btn">Try Again</button>
+  </div>
+</div>
+
+<!-- ===== Study Screen ===== -->
+<div id="study-screen" class="screen study-screen">
+  <div class="brand-logo-sm" id="logo-study"></div>
+  <h2 class="study-title">Study Pi</h2>
+  <p class="study-subtitle">Learn &middot; Cover &middot; Practice</p>
+
+  <div class="study-range" id="study-range"></div>
+
+  <!-- Read / Cover view -->
+  <div class="study-chunk-area" id="study-read-area">
+    <div class="study-chunk-card">
+      <div class="study-chunk-label" id="study-chunk-label">Digits 1-50</div>
+      <div class="study-chunk-digits" id="study-chunk-digits"></div>
+    </div>
+    <div class="study-nav">
+      <button class="study-nav-btn" id="study-prev">&larr;</button>
+      <span class="study-page-info" id="study-page-info">1 / 1</span>
+      <button class="study-nav-btn" id="study-next">&rarr;</button>
+    </div>
+    <div class="study-controls">
+      <button class="study-toggle-btn" id="study-cover-btn">Cover</button>
+      <button class="study-toggle-btn" id="study-reveal-all-btn">Reveal All</button>
+      <button class="study-toggle-btn" id="study-practice-btn">Practice</button>
+    </div>
+  </div>
+
+  <!-- Practice view -->
+  <div class="practice-area" id="practice-area">
+    <div class="practice-teleprompter">
+      <div class="practice-digits" id="practice-digits"></div>
+    </div>
+    <div class="practice-progress" id="practice-progress">0 / 50</div>
+    <div class="practice-numpad-container">
+      <div class="numpad practice-numpad" id="practice-numpad">
+        <button class="numpad-btn" data-digit="1">1</button>
+        <button class="numpad-btn" data-digit="2">2</button>
+        <button class="numpad-btn" data-digit="3">3</button>
+        <button class="numpad-btn" data-digit="4">4</button>
+        <button class="numpad-btn" data-digit="5">5</button>
+        <button class="numpad-btn" data-digit="6">6</button>
+        <button class="numpad-btn" data-digit="7">7</button>
+        <button class="numpad-btn" data-digit="8">8</button>
+        <button class="numpad-btn" data-digit="9">9</button>
+        <button class="numpad-btn zero-btn" data-digit="0">0</button>
+      </div>
+    </div>
+    <div class="study-controls">
+      <button class="practice-restart-btn" id="practice-restart">Restart</button>
+      <button class="study-toggle-btn" id="practice-back-btn">Back to Read</button>
+    </div>
+  </div>
+
+  <button class="study-back-btn" id="study-back-btn">Home</button>
+</div>
+
+<script>
+// ===== Brand Logo =====
+let logoIdCounter = 0;
+function createLogoSVG() {
+  const uid = ++logoIdCounter;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 512 512');
+  svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="lg${uid}" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" style="stop-color:var(--accent)"/>
+        <stop offset="100%" style="stop-color:var(--accent-secondary)"/>
+      </linearGradient>
+      <filter id="gw${uid}"><feGaussianBlur stdDeviation="6" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <rect width="512" height="512" rx="108" fill="var(--bg)"/>
+    <rect x="6" y="6" width="500" height="500" rx="102" fill="none" stroke="url(#lg${uid})" stroke-width="3" opacity="0.35"/>
+    <text x="256" y="340" text-anchor="middle" font-family="Georgia,Times New Roman,serif"
+      font-size="320" font-weight="bold" fill="url(#lg${uid})" filter="url(#gw${uid})">\u03C0</text>
+    <text x="256" y="445" text-anchor="middle" font-family="Courier New,monospace"
+      font-size="68" fill="var(--accent)" opacity="0.45">3.14159</text>`;
+  return svg;
+}
+
+function placeBrandLogos() {
+  [['logo-start','brand-logo'], ['logo-gameover','brand-logo-sm'], ['logo-study','brand-logo-sm'], ['logo-modal','brand-logo-xs']].forEach(([id, cls]) => {
+    const el = document.getElementById(id);
+    if (el) { el.className = cls; el.style.display = cls === 'brand-logo-xs' ? 'inline-block' : ''; el.innerHTML = ''; el.appendChild(createLogoSVG()); }
+  });
+}
+
+// Generate app icons dynamically via canvas
+function drawAppIcon(size) {
+  const c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  const ctx = c.getContext('2d');
+  // Full rect background (iOS masks it automatically)
+  ctx.fillStyle = '#0a0a0f'; ctx.fillRect(0, 0, size, size);
+  // Subtle border
+  const grad2 = ctx.createLinearGradient(0, 0, size, size);
+  grad2.addColorStop(0, 'rgba(0,229,255,0.25)'); grad2.addColorStop(1, 'rgba(255,0,229,0.25)');
+  ctx.strokeStyle = grad2; ctx.lineWidth = size * 0.02;
+  const inset = size * 0.03;
+  ctx.strokeRect(inset, inset, size - inset*2, size - inset*2);
+  // Gradient pi symbol
+  const grad = ctx.createLinearGradient(0, 0, size, size);
+  grad.addColorStop(0, '#00e5ff'); grad.addColorStop(1, '#ff00e5');
+  ctx.fillStyle = grad;
+  ctx.font = `bold ${size * 0.62}px Georgia, serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = size * 0.06;
+  ctx.fillText('\u03C0', size/2, size/2 - size*0.04);
+  // Subtitle
+  ctx.shadowBlur = 0; ctx.globalAlpha = 0.45; ctx.fillStyle = '#00e5ff';
+  ctx.font = `${size * 0.12}px Courier New, monospace`;
+  ctx.fillText('3.14159', size/2, size * 0.82);
+  return c.toDataURL('image/png');
+}
+
+function generateAppIcons() {
+  // apple-touch-icon (180px)
+  const link180 = document.createElement('link');
+  link180.rel = 'apple-touch-icon'; link180.sizes = '180x180';
+  link180.href = drawAppIcon(180);
+  document.head.appendChild(link180);
+  // Generate dynamic manifest with embedded icon data URIs
+  const icon192 = drawAppIcon(192), icon512 = drawAppIcon(512);
+  const manifest = {
+    name: 'Pi Game', short_name: 'Pi Game',
+    description: 'How many digits of Pi can you recite?',
+    start_url: './', scope: './', display: 'standalone',
+    background_color: '#0a0a0f', theme_color: '#0a0a0f', orientation: 'portrait',
+    icons: [
+      { src: icon192, sizes: '192x192', type: 'image/png' },
+      { src: icon512, sizes: '512x512', type: 'image/png' }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+  const manifestLink = document.querySelector('link[rel="manifest"]');
+  if (manifestLink) manifestLink.href = URL.createObjectURL(blob);
+}
+
+// ===== Pi Digits =====
+const PI_DIGITS = '1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463598224737190721798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989';
+
+// ===== State =====
+const DEFAULT_STATE = {
+  gameState: 'MENU', currentTheme: 'neural', piSequence: PI_DIGITS,
+  userSequence: '', startTime: null, leaderboard: [], soundEnabled: true
+};
+let state = { ...DEFAULT_STATE };
+let timerInterval = null, lastPressTime = 0, comboLevel = 0, lastGameScore = 0;
+
+// ===== Audio =====
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playCorrectSound(digitIndex) {
+  if (!state.soundEnabled) return;
+  try {
+    const ctx = getAudioCtx(), osc = ctx.createOscillator(), gain = ctx.createGain();
+    const freq = Math.min(440 + digitIndex * 8, 1200);
+    osc.frequency.setValueAtTime(freq, ctx.currentTime); osc.type = 'sine';
+    if (comboLevel > 3) {
+      const o2 = ctx.createOscillator(), g2 = ctx.createGain();
+      o2.frequency.setValueAtTime(freq * 1.5, ctx.currentTime); o2.type = 'triangle';
+      g2.gain.setValueAtTime(0.05 * Math.min(comboLevel, 10), ctx.currentTime);
+      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      o2.connect(g2).connect(ctx.destination); o2.start(); o2.stop(ctx.currentTime + 0.15);
+    }
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    osc.connect(gain).connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.12);
+  } catch (e) {}
+}
+function playWrongSound() {
+  if (!state.soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    [150, 157, 185].forEach(f => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.setValueAtTime(f, ctx.currentTime); o.type = 'sawtooth';
+      g.gain.setValueAtTime(0.12, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.5);
+    });
+  } catch (e) {}
+}
+function playPracticeCorrect() {
+  if (!state.soundEnabled) return;
+  try {
+    const ctx = getAudioCtx(), o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.setValueAtTime(600, ctx.currentTime); o.type = 'sine';
+    g.gain.setValueAtTime(0.08, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+    o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.08);
+  } catch (e) {}
+}
+function playPracticeWrong() {
+  if (!state.soundEnabled) return;
+  try {
+    const ctx = getAudioCtx(), o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.setValueAtTime(200, ctx.currentTime); o.type = 'square';
+    g.gain.setValueAtTime(0.1, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.2);
+  } catch (e) {}
+}
+
+// ===== Particles =====
+const canvas = document.getElementById('particle-canvas');
+const pctx = canvas.getContext('2d');
+let particles = [];
+function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resizeCanvas(); window.addEventListener('resize', resizeCanvas);
+
+class Particle {
+  constructor(x, y, color) {
+    this.x = x; this.y = y;
+    this.vx = (Math.random() - 0.5) * 8; this.vy = (Math.random() - 0.5) * 8 - 2;
+    this.life = 1; this.decay = 0.02 + Math.random() * 0.03;
+    this.size = 2 + Math.random() * 4; this.color = color;
+  }
+  update() { this.x += this.vx; this.y += this.vy; this.vy += 0.1; this.life -= this.decay; }
+  draw(c) {
+    c.globalAlpha = Math.max(0, this.life); c.fillStyle = this.color;
+    c.beginPath(); c.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2); c.fill();
+  }
+}
+function spawnParticles(x, y, color, count = 12) { for (let i = 0; i < count; i++) particles.push(new Particle(x, y, color)); }
+function spawnErrorParticles(x, y) {
+  const c = getComputedStyle(document.body).getPropertyValue('--error-color').trim();
+  for (let i = 0; i < 25; i++) { const p = new Particle(x, y, c); p.vx = (Math.random()-0.5)*14; p.vy = (Math.random()-0.5)*14; p.size = 3+Math.random()*5; particles.push(p); }
+}
+function animateParticles() {
+  pctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => { p.update(); p.draw(pctx); }); pctx.globalAlpha = 1;
+  if (particles.length > 0) requestAnimationFrame(animateParticles);
+}
+function triggerParticles(el, color) {
+  const r = el.getBoundingClientRect();
+  spawnParticles(r.left + r.width/2, r.top + r.height/2, color, Math.min(8 + comboLevel*3, 30));
+  requestAnimationFrame(animateParticles);
+}
+function triggerErrorParticles(el) {
+  const r = el.getBoundingClientRect();
+  spawnErrorParticles(r.left + r.width/2, r.top + r.height/2);
+  requestAnimationFrame(animateParticles);
+}
+
+// ===== Persistence =====
+function saveState() { localStorage.setItem('piGameState', JSON.stringify(state)); }
+function loadState() {
+  try {
+    const s = localStorage.getItem('piGameState');
+    if (s) { state = { ...DEFAULT_STATE, ...JSON.parse(s) }; state.piSequence = PI_DIGITS; }
+  } catch (e) { state = { ...DEFAULT_STATE }; }
+}
+
+// ===== DOM Refs =====
+const $ = id => document.getElementById(id);
+const $startScreen = $('start-screen'), $gameScreen = $('game-screen');
+const $gameoverScreen = $('gameover-screen'), $studyScreen = $('study-screen');
+const $piDigits = $('pi-digits'), $digitCounter = $('digit-counter'), $timerDisplay = $('timer-display');
+const $numpad = $('numpad'), $startBtn = $('start-btn'), $retryBtn = $('retry-btn');
+const $finalScore = $('final-score'), $finalTime = $('final-time');
+const $leaderboardList = $('leaderboard-list'), $gameoverLbList = $('gameover-leaderboard-list');
+const $themeButtons = document.querySelectorAll('.theme-btn');
+const $btnSound = $('btn-sound'), $btnLeaderboard = $('btn-leaderboard'), $btnStudy = $('btn-study');
+const $lbModal = $('leaderboard-modal'), $modalClose = $('modal-close');
+const $autopsy = $('autopsy'), $autopsyDisplay = $('autopsy-display');
+const $autopsyLabel = $('autopsy-label'), $autopsyStudyLink = $('autopsy-study-link');
+const $studyRange = $('study-range'), $studyChunkLabel = $('study-chunk-label');
+const $studyChunkDigits = $('study-chunk-digits');
+const $studyPrev = $('study-prev'), $studyNext = $('study-next'), $studyPageInfo = $('study-page-info');
+const $studyCoverBtn = $('study-cover-btn'), $studyRevealAllBtn = $('study-reveal-all-btn');
+const $studyPracticeBtn = $('study-practice-btn'), $studyBackBtn = $('study-back-btn');
+const $studyReadArea = $('study-read-area'), $practiceArea = $('practice-area');
+const $practiceDigits = $('practice-digits'), $practiceProgress = $('practice-progress');
+const $practiceNumpad = $('practice-numpad');
+const $practiceRestart = $('practice-restart'), $practiceBackBtn = $('practice-back-btn');
+
+// ===== Screens =====
+const allScreens = [$startScreen, $gameScreen, $gameoverScreen, $studyScreen];
+function showScreen(id) { allScreens.forEach(s => s.classList.remove('active')); $(id).classList.add('active'); }
+
+// ===== Sound Toggle =====
+function updateSoundBtn() {
+  $btnSound.innerHTML = state.soundEnabled ? '&#x1F50A;' : '&#x1F507;';
+  $btnSound.classList.toggle('muted', !state.soundEnabled);
+}
+$btnSound.addEventListener('click', () => { state.soundEnabled = !state.soundEnabled; updateSoundBtn(); saveState(); });
+
+// ===== Leaderboard Modal =====
+function renderLeaderboard(target) {
+  if (state.leaderboard.length === 0) {
+    target.innerHTML = '<li class="leaderboard-empty">No scores yet</li>'; return;
+  }
+  target.innerHTML = state.leaderboard.map((e, i) => `
+    <li class="leaderboard-item">
+      <span class="leaderboard-rank">#${i+1}</span>
+      <span class="leaderboard-score">${e.score} digits</span>
+      <span class="leaderboard-time">${e.time}s</span>
+      <span class="leaderboard-date">${e.date}</span>
+    </li>`).join('');
+}
+$btnLeaderboard.addEventListener('click', () => { renderLeaderboard($leaderboardList); $lbModal.classList.add('open'); });
+$modalClose.addEventListener('click', () => $lbModal.classList.remove('open'));
+$lbModal.addEventListener('click', (e) => { if (e.target === $lbModal) $lbModal.classList.remove('open'); });
+
+// ===== Study Button =====
+$btnStudy.addEventListener('click', () => openStudy(0));
+
+// ===== Theme =====
+function applyTheme(t) {
+  document.body.setAttribute('data-theme', t); state.currentTheme = t;
+  $themeButtons.forEach(b => b.classList.toggle('selected', b.dataset.themeChoice === t));
+  saveState();
+}
+$themeButtons.forEach(b => b.addEventListener('click', () => applyTheme(b.dataset.themeChoice)));
+
+// ===== Timer =====
+function startTimer() {
+  stopTimer();
+  timerInterval = setInterval(() => {
+    if (state.startTime) $timerDisplay.textContent = ((Date.now() - state.startTime) / 1000).toFixed(1) + 's';
+  }, 100);
+}
+function stopTimer() { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } }
+
+// ===== Render Pi Display =====
+function renderPiDigits() {
+  const d = state.userSequence; let h = '';
+  for (let i = 0; i < d.length; i++) {
+    h += `<span class="pi-digit${i === d.length-1 ? ' latest' : ''}" style="--digit-index:${i}">${d[i]}</span>`;
+  }
+  $piDigits.innerHTML = h;
+  $digitCounter.textContent = d.length + ' digit' + (d.length !== 1 ? 's' : '');
+  $('pi-display').scrollTop = $('pi-display').scrollHeight;
+}
+
+// ===== Game Logic =====
+function startGame() {
+  state.gameState = 'PLAYING'; state.userSequence = ''; state.startTime = null;
+  comboLevel = 0; lastPressTime = 0; saveState(); renderPiDigits();
+  $timerDisplay.textContent = '0.0s'; showScreen('game-screen');
+}
+
+function handleDigitPress(digit, btn) {
+  if (state.gameState !== 'PLAYING') return;
+  const idx = state.userSequence.length, expected = state.piSequence[idx];
+  if (!state.startTime) { state.startTime = Date.now(); startTimer(); }
+  const now = Date.now();
+  if (lastPressTime && (now - lastPressTime) < 400) comboLevel++; else comboLevel = Math.max(0, comboLevel - 1);
+  lastPressTime = now;
+  $numpad.classList.toggle('combo-active', comboLevel > 5);
+
+  if (digit === expected) {
+    state.userSequence += digit; saveState(); renderPiDigits(); playCorrectSound(idx);
+    btn.classList.add('correct-flash'); setTimeout(() => btn.classList.remove('correct-flash'), 200);
+    document.body.classList.add('shake-correct'); setTimeout(() => document.body.classList.remove('shake-correct'), 150);
+    triggerParticles(btn, getComputedStyle(document.body).getPropertyValue('--success-color').trim());
+  } else { gameOver(btn); }
+}
+
+function gameOver(btn) {
+  state.gameState = 'GAME_OVER'; stopTimer();
+  const score = state.userSequence.length; lastGameScore = score;
+  const timeMs = state.startTime ? Date.now() - state.startTime : 0;
+  const timeSec = (timeMs / 1000).toFixed(1);
+  playWrongSound();
+  document.body.classList.add('shake-wrong'); setTimeout(() => document.body.classList.remove('shake-wrong'), 400);
+  if (btn) { btn.classList.add('wrong-flash'); setTimeout(() => btn.classList.remove('wrong-flash'), 500); triggerErrorParticles(btn); }
+  if (score > 0) {
+    state.leaderboard.push({ score, time: parseFloat(timeSec), date: new Date().toLocaleDateString() });
+    state.leaderboard.sort((a, b) => b.score - a.score || a.time - b.time);
+    state.leaderboard = state.leaderboard.slice(0, 5);
+  }
+  state.userSequence = ''; state.startTime = null; saveState();
+  setTimeout(() => {
+    $finalScore.textContent = score; $finalTime.textContent = timeSec;
+    renderLeaderboard($gameoverLbList); renderAutopsy(score); showScreen('gameover-screen');
+  }, 600);
+}
+
+// ===== Autopsy =====
+function renderAutopsy(score) {
+  if (score === 0) { $autopsy.style.display = 'none'; return; }
+  $autopsy.style.display = '';
+  const tail = Math.min(score, 8), correct = PI_DIGITS.slice(score - tail, score);
+  const missedCount = 20, missed = PI_DIGITS.slice(score, score + missedCount);
+  let h = '<span class="autopsy-correct">&hellip;' + correct + '</span>';
+  h += '<span class="autopsy-cursor"></span>';
+  for (let i = 0; i < missed.length; i++)
+    h += `<span class="autopsy-missed" style="animation-delay:${0.8 + i*0.08}s">${missed[i]}</span>`;
+  $autopsyDisplay.innerHTML = h;
+  $autopsyLabel.textContent = `You reached digit ${score} \u2014 here are digits ${score+1}\u2013${Math.min(score+missedCount, PI_DIGITS.length)}`;
+  $autopsyStudyLink.onclick = () => { openStudy(Math.floor(score / 50)); enterPractice(); };
+}
+
+// ===== Study Mode =====
+const CHUNK = 50, GROUP = 5;
+let studyIdx = 0, studyCoverMode = false;
+const RANGES = [];
+for (let i = 0; i < PI_DIGITS.length; i += CHUNK)
+  RANGES.push({ start: i, end: Math.min(i + CHUNK, PI_DIGITS.length) });
+
+function buildRangeButtons() {
+  $studyRange.innerHTML = '';
+  RANGES.forEach((r, i) => {
+    const b = document.createElement('button');
+    b.className = 'study-range-btn'; b.textContent = `${r.start+1}\u2013${r.end}`;
+    b.addEventListener('click', () => { studyIdx = i; renderStudy(); });
+    $studyRange.appendChild(b);
+  });
+}
+
+function renderStudy() {
+  const r = RANGES[studyIdx]; if (!r) return;
+  const digits = PI_DIGITS.slice(r.start, r.end);
+  $studyChunkLabel.textContent = `Digits ${r.start+1}\u2013${r.end}`;
+  let h = '';
+  for (let i = 0; i < digits.length; i += GROUP) {
+    h += `<span class="study-group" data-group="${i/GROUP}">${digits.slice(i, i+GROUP)}</span>`;
+  }
+  $studyChunkDigits.innerHTML = h;
+  $studyChunkDigits.classList.toggle('covered', studyCoverMode);
+  $studyPageInfo.textContent = `${studyIdx+1} / ${RANGES.length}`;
+  $studyPrev.disabled = studyIdx <= 0;
+  $studyNext.disabled = studyIdx >= RANGES.length - 1;
+  if (studyCoverMode)
+    $studyChunkDigits.querySelectorAll('.study-group').forEach(g => g.addEventListener('click', () => g.classList.toggle('revealed')));
+  $studyRange.querySelectorAll('.study-range-btn').forEach((b, i) => b.classList.toggle('active', i === studyIdx));
+  $studyCoverBtn.classList.toggle('active', studyCoverMode);
+}
+
+function openStudy(idx) {
+  studyIdx = Math.max(0, Math.min(idx, RANGES.length - 1));
+  studyCoverMode = false;
+  buildRangeButtons(); renderStudy();
+  $studyReadArea.style.display = ''; $practiceArea.classList.remove('active');
+  showScreen('study-screen');
+}
+
+$studyPrev.addEventListener('click', () => { if (studyIdx > 0) { studyIdx--; renderStudy(); } });
+$studyNext.addEventListener('click', () => { if (studyIdx < RANGES.length-1) { studyIdx++; renderStudy(); } });
+$studyCoverBtn.addEventListener('click', () => { studyCoverMode = !studyCoverMode; renderStudy(); });
+$studyRevealAllBtn.addEventListener('click', () => $studyChunkDigits.querySelectorAll('.study-group').forEach(g => g.classList.add('revealed')));
+$studyBackBtn.addEventListener('click', () => showScreen('start-screen'));
+
+// ===== Practice Mode =====
+let practicePos = 0, practiceDigitsStr = '', practiceRangeStart = 0;
+
+function enterPractice() {
+  const r = RANGES[studyIdx];
+  practiceDigitsStr = PI_DIGITS.slice(r.start, r.end);
+  practiceRangeStart = r.start;
+  practicePos = 0;
+  $studyReadArea.style.display = 'none';
+  $practiceArea.classList.add('active');
+  renderPractice();
+}
+
+function renderPractice() {
+  const WINDOW = 30; // digits visible around cursor
+  const half = Math.floor(WINDOW / 2);
+  let h = '';
+
+  for (let i = 0; i < practiceDigitsStr.length; i++) {
+    // Add separator every 5 digits
+    if (i > 0 && i % GROUP === 0) h += '<span class="practice-digit-separator"></span>';
+
+    let cls = 'practice-digit';
+    if (i < practicePos) cls += ' done';
+    else if (i === practicePos) cls += ' current';
+    else if (i <= practicePos + half) cls += ' upcoming';
+    else cls += ' upcoming far';
+
+    h += `<span class="${cls}" data-idx="${i}">${practiceDigitsStr[i]}</span>`;
+  }
+
+  $practiceDigits.innerHTML = h;
+  $practiceProgress.textContent = `${practicePos} / ${practiceDigitsStr.length}`;
+
+  // Scroll current digit into view
+  const cur = $practiceDigits.querySelector('.current');
+  if (cur) cur.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+}
+
+function handlePracticePress(digit, btn) {
+  if (practicePos >= practiceDigitsStr.length) return;
+  const expected = practiceDigitsStr[practicePos];
+
+  if (digit === expected) {
+    practicePos++;
+    playPracticeCorrect();
+    btn.classList.add('correct-flash'); setTimeout(() => btn.classList.remove('correct-flash'), 150);
+    renderPractice();
+    if (practicePos >= practiceDigitsStr.length) {
+      $practiceProgress.textContent = 'Complete!';
+    }
+  } else {
+    playPracticeWrong();
+    btn.classList.add('wrong-flash'); setTimeout(() => btn.classList.remove('wrong-flash'), 300);
+    // Flash the current digit red briefly
+    const cur = $practiceDigits.querySelector('.current');
+    if (cur) { cur.classList.add('wrong-highlight'); setTimeout(() => cur.classList.remove('wrong-highlight'), 400); }
+  }
+}
+
+$studyPracticeBtn.addEventListener('click', enterPractice);
+$practiceRestart.addEventListener('click', () => { practicePos = 0; renderPractice(); });
+$practiceBackBtn.addEventListener('click', () => {
+  $practiceArea.classList.remove('active'); $studyReadArea.style.display = ''; renderStudy();
+});
+
+// Practice numpad
+$practiceNumpad.addEventListener('click', (e) => {
+  const b = e.target.closest('.numpad-btn');
+  if (b) handlePracticePress(b.dataset.digit, b);
+});
+$practiceNumpad.addEventListener('touchend', (e) => {
+  const b = e.target.closest('.numpad-btn');
+  if (b) { e.preventDefault(); handlePracticePress(b.dataset.digit, b); }
+});
+
+// ===== Event Listeners =====
+$numpad.addEventListener('click', (e) => { const b = e.target.closest('.numpad-btn'); if (b) handleDigitPress(b.dataset.digit, b); });
+$numpad.addEventListener('touchend', (e) => { const b = e.target.closest('.numpad-btn'); if (b) { e.preventDefault(); handleDigitPress(b.dataset.digit, b); } });
+
+document.addEventListener('keydown', (e) => {
+  // Close modal on Escape
+  if (e.key === 'Escape' && $lbModal.classList.contains('open')) { $lbModal.classList.remove('open'); return; }
+
+  if (e.key >= '0' && e.key <= '9') {
+    // Practice mode keyboard
+    if ($studyScreen.classList.contains('active') && $practiceArea.classList.contains('active')) {
+      e.preventDefault();
+      const b = $practiceNumpad.querySelector(`[data-digit="${e.key}"]`);
+      if (b) { b.classList.add('pressing'); setTimeout(() => b.classList.remove('pressing'), 150); handlePracticePress(e.key, b); }
+      return;
+    }
+    // Game keyboard
+    if (state.gameState === 'PLAYING') {
+      e.preventDefault();
+      const b = $numpad.querySelector(`[data-digit="${e.key}"]`);
+      if (b) { b.classList.add('pressing'); setTimeout(() => b.classList.remove('pressing'), 150); handleDigitPress(e.key, b); }
+    }
+  }
+
+  // Study arrow keys
+  if ($studyScreen.classList.contains('active') && !$practiceArea.classList.contains('active')) {
+    if (e.key === 'ArrowLeft') $studyPrev.click();
+    if (e.key === 'ArrowRight') $studyNext.click();
+  }
+});
+
+$startBtn.addEventListener('click', startGame);
+$retryBtn.addEventListener('click', () => { state.gameState = 'MENU'; saveState(); showScreen('start-screen'); });
+
+// ===== Init =====
+function init() {
+  loadState(); applyTheme(state.currentTheme); updateSoundBtn(); buildRangeButtons();
+  placeBrandLogos(); generateAppIcons();
+  if (state.gameState === 'PLAYING' && state.userSequence.length > 0) {
+    renderPiDigits();
+    if (state.startTime) { $timerDisplay.textContent = ((Date.now()-state.startTime)/1000).toFixed(1)+'s'; startTimer(); }
+    showScreen('game-screen');
+  } else { if (state.gameState === 'GAME_OVER') { state.gameState = 'MENU'; saveState(); } showScreen('start-screen'); }
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
