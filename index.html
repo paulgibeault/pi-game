@@ -1399,18 +1399,31 @@ $practiceBackBtn.addEventListener('click', () => {
 });
 
 // Practice numpad
+const safePracticePress = dedupeInput(handlePracticePress);
 $practiceNumpad.addEventListener('click', (e) => {
   const b = e.target.closest('.numpad-btn');
-  if (b) handlePracticePress(b.dataset.digit, b);
+  if (b) safePracticePress(b.dataset.digit, b);
 });
 $practiceNumpad.addEventListener('touchend', (e) => {
   const b = e.target.closest('.numpad-btn');
-  if (b) { e.preventDefault(); handlePracticePress(b.dataset.digit, b); }
+  if (b) { e.preventDefault(); safePracticePress(b.dataset.digit, b); }
 });
 
 // ===== Event Listeners =====
-$numpad.addEventListener('click', (e) => { const b = e.target.closest('.numpad-btn'); if (b) handleDigitPress(b.dataset.digit, b); });
-$numpad.addEventListener('touchend', (e) => { const b = e.target.closest('.numpad-btn'); if (b) { e.preventDefault(); handleDigitPress(b.dataset.digit, b); } });
+// Prevent double-fire from touch + click on mobile
+let lastInputTime = 0;
+function dedupeInput(handler) {
+  return function(digit, btn) {
+    const now = Date.now();
+    if (now - lastInputTime < 50) return; // ignore if <50ms since last input
+    lastInputTime = now;
+    handler(digit, btn);
+  };
+}
+const safeDigitPress = dedupeInput(handleDigitPress);
+
+$numpad.addEventListener('click', (e) => { const b = e.target.closest('.numpad-btn'); if (b) safeDigitPress(b.dataset.digit, b); });
+$numpad.addEventListener('touchend', (e) => { const b = e.target.closest('.numpad-btn'); if (b) { e.preventDefault(); safeDigitPress(b.dataset.digit, b); } });
 
 document.addEventListener('keydown', (e) => {
   // Close modal on Escape
