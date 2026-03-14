@@ -1,8 +1,12 @@
 <div align="center">
 
+<img src="icon.svg" alt="Pi Game" width="120" />
+
 # Pi Game
 
 ### How many digits of Pi live in your brain?
+
+<img src="pi-game.png" alt="Pi Game" width="300" />
 
 <a href="https://paulgibeault.github.io/pi-game/">
   <img src="https://img.shields.io/badge/▶_PLAY_NOW-Take_the_Challenge-blue?style=for-the-badge&labelColor=1a1a2e&color=e94560" alt="Play Now" height="50" />
