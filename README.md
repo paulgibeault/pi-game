@@ -59,25 +59,32 @@ Pi Game is a fast-paced memorization gauntlet. Tap digits of Pi on a number pad 
 
 <table>
   <tr>
-    <td align="center" width="33%">
+    <td align="center" width="25%">
       <a href="https://paulgibeault.github.io/hecknsic/">
         <img src="https://github.com/paulgibeault/hecknsic/blob/main/img/logo_header.jpg?raw=true" width="120" alt="Hecknsic" /><br />
         <b>Hecknsic</b><br />
         <sub>Hexagonal Puzzle</sub>
       </a>
     </td>
-    <td align="center" width="33%">
+    <td align="center" width="25%">
       <a href="https://paulgibeault.github.io/cozy-solitaire/">
         <img src="https://github.com/paulgibeault/cozy-solitaire/blob/main/icon.svg?raw=true" width="120" alt="Cozy Solitaire" /><br />
         <b>Cozy Solitaire</b><br />
         <sub>Klondike · FreeCell · Spider</sub>
       </a>
     </td>
-    <td align="center" width="33%">
+    <td align="center" width="25%">
       <a href="https://paulgibeault.github.io/si-syn/">
         <img src="https://github.com/paulgibeault/si-syn/blob/main/public/icon.svg?raw=true" width="120" alt="Silicon Syndicate" /><br />
         <b>Silicon Syndicate</b><br />
         <sub>Logic Puzzle</sub>
+      </a>
+    </td>
+    <td align="center" width="25%">
+      <a href="https://paulgibeault.github.io/sew-what/">
+        <img src="https://github.com/paulgibeault/sew-what/blob/main/sew-what-logo.png?raw=true" width="120" alt="Sew What" /><br />
+        <b>Sew What</b><br />
+        <sub>Garment Design Puzzle</sub>
       </a>
     </td>
   </tr>
