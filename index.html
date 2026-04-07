@@ -617,6 +617,9 @@ body {
   text-transform: uppercase; transition: all 0.25s;
 }
 .retry-btn:hover { background: var(--btn-hover); box-shadow: var(--btn-shadow); transform: translateY(-2px); }
+.keyboard-hint { font-size: 0.72rem; color: var(--text-muted, rgba(255,255,255,0.35)); margin: 4px 0 0; letter-spacing: 0.05em; }
+.keyboard-hint kbd { display: inline-block; padding: 1px 5px; border: 1px solid var(--text-muted, rgba(255,255,255,0.3)); border-radius: 3px; font-family: var(--font-mono, monospace); font-size: 0.7rem; color: inherit; background: transparent; }
+@media (hover: none) and (pointer: coarse) { .keyboard-hint { display: none; } }
 
 /* ===== Study Screen ===== */
 .study-screen { gap: 10px; padding: 16px; justify-content: flex-start; padding-top: calc(env(safe-area-inset-top, 8px) + 54px); }
@@ -829,6 +832,7 @@ body {
     <button class="theme-btn" data-theme-choice="orbital">Orbital</button>
   </div>
   <button class="start-btn" id="start-btn">Start Game</button>
+  <p class="keyboard-hint">press <kbd>Enter</kbd> to start</p>
 </div>
 
 <!-- ===== Game Screen ===== -->
@@ -882,6 +886,7 @@ body {
 
   <div class="gameover-actions">
     <button class="retry-btn" id="retry-btn">Try Again</button>
+    <p class="keyboard-hint">press <kbd>R</kbd> to retry</p>
   </div>
 </div>
 
@@ -1428,6 +1433,12 @@ $numpad.addEventListener('touchend', (e) => { const b = e.target.closest('.numpa
 document.addEventListener('keydown', (e) => {
   // Close modal on Escape
   if (e.key === 'Escape' && $lbModal.classList.contains('open')) { $lbModal.classList.remove('open'); return; }
+
+  // Enter to start game from menu
+  if (e.key === 'Enter' && $startScreen.classList.contains('active')) { e.preventDefault(); $startBtn.click(); return; }
+
+  // R to retry (go back to menu) from game over screen
+  if ((e.key === 'r' || e.key === 'R') && $gameoverScreen.classList.contains('active')) { e.preventDefault(); $retryBtn.click(); return; }
 
   if (e.key >= '0' && e.key <= '9') {
     // Practice mode keyboard
