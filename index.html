@@ -1099,8 +1099,18 @@ function playPracticeWrong() {
 const canvas = document.getElementById('particle-canvas');
 const pctx = canvas.getContext('2d');
 let particles = [];
-function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-resizeCanvas(); window.addEventListener('resize', resizeCanvas);
+function resizeCanvas() {
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }, 150);
+}
+let resizeTimer;
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
 
 class Particle {
   constructor(x, y, color) {
@@ -1185,13 +1195,20 @@ function renderLeaderboard(target) {
   if (state.leaderboard.length === 0) {
     target.innerHTML = '<li class="leaderboard-empty">No scores yet</li>'; return;
   }
-  target.innerHTML = state.leaderboard.map((e, i) => `
-    <li class="leaderboard-item">
+  target.innerHTML = '';
+  state.leaderboard.forEach((e, i) => {
+    const li = document.createElement('li');
+    li.className = 'leaderboard-item';
+    li.innerHTML = `
       <span class="leaderboard-rank">#${i+1}</span>
-      <span class="leaderboard-score">${e.score} digits</span>
-      <span class="leaderboard-time">${e.time}s</span>
-      <span class="leaderboard-date">${e.date}</span>
-    </li>`).join('');
+      <span class="leaderboard-score"></span>
+      <span class="leaderboard-time"></span>
+      <span class="leaderboard-date"></span>`;
+    li.querySelector('.leaderboard-score').textContent = e.score + ' digits';
+    li.querySelector('.leaderboard-time').textContent = e.time + 's';
+    li.querySelector('.leaderboard-date').textContent = e.date;
+    target.appendChild(li);
+  });
 }
 $btnLeaderboard.addEventListener('click', () => { renderLeaderboard($leaderboardList); $lbModal.classList.add('open'); });
 $modalClose.addEventListener('click', () => $lbModal.classList.remove('open'));
