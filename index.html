@@ -391,13 +391,17 @@ body {
 .game-screen { justify-content: space-between; padding: 24px 16px; overflow: hidden; }
 
 .pi-display-container {
-  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  width: 100%; max-width: 600px; min-height: 0;
+  position: fixed; top: max(20px, env(safe-area-inset-top, 20px)); left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  pointer-events: none; z-index: 5; max-height: 35vh; width: 100%; max-width: 600px;
+  background: var(--leaderboard-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px; padding: 12px 0; border: 1px solid var(--leaderboard-border);
 }
 .pi-display {
-  font-family: var(--font-display); font-size: var(--pi-font-size); color: var(--text);
+  font-family: var(--font-display); font-size: calc(var(--pi-font-size) * 0.85); color: var(--text);
   text-align: center; word-break: break-all; line-height: 1.4; padding: 0 16px;
-  max-height: 40vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--accent) transparent;
+  max-width: 600px;
+  max-height: 25vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--accent) transparent;
 }
 .pi-display::-webkit-scrollbar { width: 4px; }
 .pi-display::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
@@ -414,17 +418,22 @@ body {
 .timer-display { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.05em; }
 
 /* ===== Number Pad ===== */
-.numpad-container { width: 100%; max-width: 340px; padding-bottom: env(safe-area-inset-bottom, 8px); }
+.numpad-container, .practice-numpad-container {
+  position: fixed; bottom: max(20px, env(safe-area-inset-bottom, 8px)); left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 340px; z-index: 5;
+}
 .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--pad-gap); }
 .numpad-btn {
   aspect-ratio: 1.2; font-family: var(--font-display); font-size: clamp(1.4rem, 4vw, 2rem);
-  background: var(--btn-bg); color: var(--btn-text); border: 1.5px solid var(--btn-border);
-  border-radius: var(--btn-radius); cursor: pointer; transition: all 0.15s;
-  position: relative; overflow: hidden;
+  background: rgba(255, 255, 255, 0.05); color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--btn-radius);
+  cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden;
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
   user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
 }
-.numpad-btn:hover { background: var(--btn-hover); box-shadow: var(--btn-shadow); }
-.numpad-btn:active, .numpad-btn.pressing { animation: btn-press 0.15s ease-out; background: var(--btn-active); }
+.numpad-btn:hover { background: rgba(255, 255, 255, 0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.numpad-btn:active, .numpad-btn.pressing { animation: btn-press 0.15s ease-out; background: rgba(255, 255, 255, 0.25); }
 .numpad-btn.correct-flash { border-color: var(--success-color) !important; box-shadow: 0 0 20px rgba(0, 255, 136, 0.4) !important; }
 .numpad-btn.wrong-flash { border-color: var(--error-color) !important; box-shadow: 0 0 20px rgba(255, 51, 102, 0.5) !important; background: rgba(255, 51, 102, 0.2) !important; }
 .numpad-btn.zero-btn { grid-column: 2; }
@@ -432,80 +441,7 @@ body {
 
 /* ===== Theme-Specific Overrides ===== */
 
-/* Neural: beveled mechanical keys, inner glow line */
-[data-theme="neural"] .numpad-btn {
-  border-width: 1px;
-  box-shadow: inset 0 1px 0 rgba(0,229,255,0.12), 0 2px 6px rgba(0,0,0,0.5);
-}
-[data-theme="neural"] .numpad-btn::after {
-  content: ''; position: absolute; bottom: 0; left: 10%; right: 10%; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0,229,255,0.3), transparent);
-}
-[data-theme="neural"] .pi-prefix { font-weight: bold; }
-[data-theme="neural"] .start-screen .title {
-  text-shadow: 0 0 40px rgba(0,229,255,0.5), 0 0 80px rgba(255,0,229,0.2);
-}
-
-/* Blueprint: extruded technical buttons, precise borders, hatched active state */
-[data-theme="blueprint"] .numpad-btn {
-  border-width: 1.5px;
-  text-transform: none;
-  font-weight: 600;
-  box-shadow: 0 2px 0 rgba(74,192,232,0.15), inset 0 1px 0 rgba(74,192,232,0.06);
-}
-[data-theme="blueprint"] .numpad-btn:active,
-[data-theme="blueprint"] .numpad-btn.pressing {
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-  transform: translateY(1px);
-}
-[data-theme="blueprint"] .pi-display { letter-spacing: 0.05em; }
-[data-theme="blueprint"] .start-screen .title { letter-spacing: 0.15em; font-weight: 700; }
-[data-theme="blueprint"] .theme-btn { border-width: 1.5px; }
-
-/* Gallery: glassmorphism buttons, soft diffused shadows, elegant feel */
-[data-theme="gallery"] .numpad-btn {
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  border-width: 1px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
-  font-weight: 400; letter-spacing: 0.02em;
-}
-[data-theme="gallery"] .numpad-btn:hover {
-  box-shadow: 0 6px 24px rgba(0,0,0,0.06);
-}
-[data-theme="gallery"] .pi-display { font-style: italic; }
-[data-theme="gallery"] .pi-prefix { font-style: italic; }
-[data-theme="gallery"] .start-screen .title {
-  font-style: italic; letter-spacing: 0.05em;
-  text-shadow: none; color: #2c2c2c;
-}
-[data-theme="gallery"] .theme-btn {
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  border-width: 1px;
-}
-[data-theme="gallery"] .leaderboard,
-[data-theme="gallery"] .autopsy,
-[data-theme="gallery"] .gameover-leaderboard,
-[data-theme="gallery"] .study-chunk-card,
-[data-theme="gallery"] .practice-teleprompter,
-[data-theme="gallery"] .modal {
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  background: rgba(255,255,255,0.55);
-}
-
-/* Orbital: spherical buttons with inner light, digit floating effect */
-[data-theme="orbital"] .numpad-btn {
-  box-shadow:
-    0 0 16px rgba(124,92,252,0.15),
-    inset 0 -4px 10px rgba(0,0,0,0.3),
-    inset 0 4px 8px rgba(124,92,252,0.1);
-  border-width: 1px;
-}
-[data-theme="orbital"] .numpad-btn:hover {
-  box-shadow:
-    0 0 24px rgba(124,92,252,0.3),
-    inset 0 -4px 10px rgba(0,0,0,0.3),
-    inset 0 4px 10px rgba(124,92,252,0.15);
-}
+/* Removed theme specific overrides to maintain highly transparent, unobtrusive UI */
 [data-theme="orbital"] .start-screen .title {
   text-shadow: 0 0 30px rgba(124,92,252,0.5), 0 0 60px rgba(252,92,124,0.2);
 }
@@ -565,7 +501,7 @@ body {
 }
 
 /* ===== Particle Canvas ===== */
-#particle-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+#particle-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
 
 /* ===== Leaderboard Modal ===== */
 .modal-overlay {
@@ -621,6 +557,7 @@ body {
 .autopsy {
   width: 100%; max-width: 500px; background: var(--leaderboard-bg);
   border: 1px solid var(--leaderboard-border); border-radius: 12px; padding: 16px 20px;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
 .autopsy-header {
   font-family: var(--font-display); color: var(--accent); font-size: 0.8rem;
@@ -649,6 +586,7 @@ body {
 .gameover-leaderboard {
   width: 100%; max-width: 380px; background: var(--leaderboard-bg);
   border: 1px solid var(--leaderboard-border); border-radius: 12px; padding: 16px 20px;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
 
 .gameover-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
@@ -680,6 +618,7 @@ body {
   background: var(--leaderboard-bg); border: 1px solid var(--leaderboard-border);
   border-radius: 10px; padding: 14px; width: 100%; text-align: center;
   animation: study-chunk-in 0.3s ease-out;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
 .study-chunk-label { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
 .study-chunk-digits {
@@ -737,6 +676,7 @@ body {
   width: 100%; background: var(--leaderboard-bg); border: 1px solid var(--leaderboard-border);
   border-radius: 10px; padding: 12px 10px; position: relative; overflow: hidden;
   min-height: 80px; display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
 
 .practice-digits {
@@ -842,6 +782,7 @@ body {
 
 <!-- Top Toolbar -->
 <div class="toolbar">
+  <button class="toolbar-btn" id="btn-camera" title="Toggle camera (Follow/Wrap)">&#x1F3A5;</button>
   <button class="toolbar-btn" id="btn-study" title="Study Pi"><span class="pi-sym">&pi;</span></button>
   <button class="toolbar-btn" id="btn-leaderboard" title="Leaderboard">&#x1F3C6;</button>
   <button class="toolbar-btn" id="btn-sound" title="Toggle sound">&#x1F50A;</button>
@@ -983,6 +924,11 @@ body {
   <button class="study-back-btn" id="study-back-btn">Home</button>
 </div>
 
+<script src="visuals/tracer.js"></script>
+<script src="visuals/spirograph.js"></script>
+<script src="visuals/gallery.js"></script>
+<script src="visuals/orbital.js"></script>
+<script src="visuals/manager.js"></script>
 <script>
 // ===== Brand Logo =====
 let logoIdCounter = 0;
@@ -1074,7 +1020,7 @@ const PI_DIGITS = '1415926535897932384626433832795028841971693993751058209749445
 // ===== State =====
 const DEFAULT_STATE = {
   gameState: 'MENU', currentTheme: 'neural', piSequence: PI_DIGITS,
-  userSequence: '', startTime: null, leaderboard: [], soundEnabled: true
+  userSequence: '', startTime: null, leaderboard: [], soundEnabled: true, cameraFollow: false
 };
 let state = { ...DEFAULT_STATE };
 let timerInterval = null, lastPressTime = 0, comboLevel = 0, lastGameScore = 0;
@@ -1148,6 +1094,7 @@ function resizeCanvas() {
   resizeTimer = setTimeout(() => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    if (typeof currentVisual !== 'undefined' && currentVisual) currentVisual.updateScreenSize();
   }, 150);
 }
 let resizeTimer;
@@ -1164,7 +1111,7 @@ class Particle {
   update() { this.x += this.vx; this.y += this.vy; this.vy += 0.1; this.life -= this.decay; }
   draw(c) {
     c.globalAlpha = Math.max(0, this.life); c.fillStyle = this.color;
-    c.beginPath(); c.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.arc(this.x, this.y, Math.max(0, this.size * this.life), 0, Math.PI * 2); c.fill();
   }
 }
 function spawnParticles(x, y, color, count = 12) { for (let i = 0; i < count; i++) particles.push(new Particle(x, y, color)); }
@@ -1172,21 +1119,35 @@ function spawnErrorParticles(x, y) {
   const c = getComputedStyle(document.body).getPropertyValue('--error-color').trim();
   for (let i = 0; i < 25; i++) { const p = new Particle(x, y, c); p.vx = (Math.random()-0.5)*14; p.vy = (Math.random()-0.5)*14; p.size = 3+Math.random()*5; particles.push(p); }
 }
+
+/* Embedded visual classes replaced by modular scripts */
+
+let animationFrameId = null;
 function animateParticles() {
   pctx.clearRect(0, 0, canvas.width, canvas.height);
   particles = particles.filter(p => p.life > 0);
   particles.forEach(p => { p.update(); p.draw(pctx); }); pctx.globalAlpha = 1;
-  if (particles.length > 0) requestAnimationFrame(animateParticles);
+  const bendyActive = currentVisual ? currentVisual.update() : false;
+  if (currentVisual) currentVisual.draw(pctx);
+  if (particles.length > 0 || bendyActive) {
+    animationFrameId = requestAnimationFrame(animateParticles);
+  } else {
+    animationFrameId = null;
+  }
 }
+function ensureAnimationLoop() {
+  if (!animationFrameId) animationFrameId = requestAnimationFrame(animateParticles);
+}
+
 function triggerParticles(el, color) {
   const r = el.getBoundingClientRect();
   spawnParticles(r.left + r.width/2, r.top + r.height/2, color, Math.min(8 + comboLevel*3, 30));
-  requestAnimationFrame(animateParticles);
+  ensureAnimationLoop();
 }
 function triggerErrorParticles(el) {
   const r = el.getBoundingClientRect();
   spawnErrorParticles(r.left + r.width/2, r.top + r.height/2);
-  requestAnimationFrame(animateParticles);
+  ensureAnimationLoop();
 }
 
 // ===== Persistence =====
@@ -1207,7 +1168,7 @@ const $numpad = $('numpad'), $startBtn = $('start-btn'), $retryBtn = $('retry-bt
 const $finalScore = $('final-score'), $finalTime = $('final-time');
 const $leaderboardList = $('leaderboard-list'), $gameoverLbList = $('gameover-leaderboard-list');
 const $themeButtons = document.querySelectorAll('.theme-btn');
-const $btnSound = $('btn-sound'), $btnLeaderboard = $('btn-leaderboard'), $btnStudy = $('btn-study');
+const $btnSound = $('btn-sound'), $btnLeaderboard = $('btn-leaderboard'), $btnStudy = $('btn-study'), $btnCamera = $('btn-camera');
 const $lbModal = $('leaderboard-modal'), $modalClose = $('modal-close');
 const $autopsy = $('autopsy'), $autopsyDisplay = $('autopsy-display');
 const $autopsyLabel = $('autopsy-label'), $autopsyStudyLink = $('autopsy-study-link');
@@ -1225,12 +1186,18 @@ const $practiceRestart = $('practice-restart'), $practiceBackBtn = $('practice-b
 const allScreens = [$startScreen, $gameScreen, $gameoverScreen, $studyScreen];
 function showScreen(id) { allScreens.forEach(s => s.classList.remove('active')); $(id).classList.add('active'); }
 
-// ===== Sound Toggle =====
+// ===== Sound & Camera Toggle =====
 function updateSoundBtn() {
   $btnSound.innerHTML = state.soundEnabled ? '&#x1F50A;' : '&#x1F507;';
   $btnSound.classList.toggle('muted', !state.soundEnabled);
 }
 $btnSound.addEventListener('click', () => { state.soundEnabled = !state.soundEnabled; updateSoundBtn(); saveState(); });
+
+function updateCameraBtn() {
+  $btnCamera.classList.toggle('active', state.cameraFollow);
+  $btnCamera.classList.toggle('muted', !state.cameraFollow);
+}
+$btnCamera.addEventListener('click', () => { state.cameraFollow = !state.cameraFollow; updateCameraBtn(); saveState(); });
 
 // ===== Leaderboard Modal =====
 function renderLeaderboard(target) {
@@ -1264,6 +1231,7 @@ function applyTheme(t) {
   document.body.setAttribute('data-theme', t); state.currentTheme = t;
   $themeButtons.forEach(b => b.classList.toggle('selected', b.dataset.themeChoice === t));
   saveState();
+  initVisual();
 }
 $themeButtons.forEach(b => b.addEventListener('click', () => applyTheme(b.dataset.themeChoice)));
 
@@ -1292,6 +1260,7 @@ function startGame() {
   state.gameState = 'PLAYING'; state.userSequence = ''; state.startTime = null;
   comboLevel = 0; lastPressTime = 0; saveState(); renderPiDigits();
   $timerDisplay.textContent = '0.0s'; showScreen('game-screen');
+  if (typeof currentVisual !== 'undefined' && currentVisual) currentVisual.reset();
 }
 
 function handleDigitPress(digit, btn) {
@@ -1308,6 +1277,7 @@ function handleDigitPress(digit, btn) {
     btn.classList.add('correct-flash'); setTimeout(() => btn.classList.remove('correct-flash'), 200);
     document.body.classList.add('shake-correct'); setTimeout(() => document.body.classList.remove('shake-correct'), 150);
     triggerParticles(btn, getComputedStyle(document.body).getPropertyValue('--success-color').trim());
+    if (typeof currentVisual !== 'undefined' && currentVisual) currentVisual.feedDigit(digit, state.userSequence.length);
   } else { gameOver(btn); }
 }
 
@@ -1406,6 +1376,7 @@ function enterPractice() {
   practicePos = 0;
   $studyReadArea.style.display = 'none';
   $practiceArea.classList.add('active');
+  if (typeof currentVisual !== 'undefined' && currentVisual) currentVisual.reset();
   renderPractice();
 }
 
@@ -1443,6 +1414,7 @@ function handlePracticePress(digit, btn) {
     practicePos++;
     playPracticeCorrect();
     btn.classList.add('correct-flash'); setTimeout(() => btn.classList.remove('correct-flash'), 150);
+    if (typeof currentVisual !== 'undefined' && currentVisual) currentVisual.feedDigit(digit, practiceRangeStart + practicePos);
     renderPractice();
     if (practicePos >= practiceDigitsStr.length) {
       $practiceProgress.textContent = 'Complete!';
@@ -1457,7 +1429,7 @@ function handlePracticePress(digit, btn) {
 }
 
 $studyPracticeBtn.addEventListener('click', enterPractice);
-$practiceRestart.addEventListener('click', () => { practicePos = 0; renderPractice(); });
+$practiceRestart.addEventListener('click', () => { practicePos = 0; if (typeof currentVisual !== 'undefined' && currentVisual) currentVisual.reset(); renderPractice(); });
 $practiceBackBtn.addEventListener('click', () => {
   $practiceArea.classList.remove('active'); $studyReadArea.style.display = ''; renderStudy();
 });
@@ -1527,7 +1499,7 @@ $retryBtn.addEventListener('click', () => { state.gameState = 'MENU'; saveState(
 
 // ===== Init =====
 function init() {
-  loadState(); applyTheme(state.currentTheme); updateSoundBtn(); buildRangeButtons();
+  loadState(); applyTheme(state.currentTheme); updateSoundBtn(); updateCameraBtn(); buildRangeButtons();
   placeBrandLogos(); generateAppIcons();
   if (state.gameState === 'PLAYING' && state.userSequence.length > 0) {
     renderPiDigits();
