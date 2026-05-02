@@ -391,13 +391,17 @@ body {
 .game-screen { justify-content: space-between; padding: 24px 16px; overflow: hidden; }
 
 .pi-display-container {
-  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  width: 100%; max-width: 600px; min-height: 0;
+  position: fixed; top: max(20px, env(safe-area-inset-top, 20px)); left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  pointer-events: none; z-index: 5; max-height: 35vh; width: 100%; max-width: 600px;
+  background: var(--leaderboard-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px; padding: 12px 0; border: 1px solid var(--leaderboard-border);
 }
 .pi-display {
-  font-family: var(--font-display); font-size: var(--pi-font-size); color: var(--text);
+  font-family: var(--font-display); font-size: calc(var(--pi-font-size) * 0.85); color: var(--text);
   text-align: center; word-break: break-all; line-height: 1.4; padding: 0 16px;
-  max-height: 40vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--accent) transparent;
+  max-width: 600px;
+  max-height: 25vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--accent) transparent;
 }
 .pi-display::-webkit-scrollbar { width: 4px; }
 .pi-display::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
@@ -414,17 +418,22 @@ body {
 .timer-display { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.05em; }
 
 /* ===== Number Pad ===== */
-.numpad-container { width: 100%; max-width: 340px; padding-bottom: env(safe-area-inset-bottom, 8px); }
+.numpad-container, .practice-numpad-container {
+  position: fixed; bottom: max(20px, env(safe-area-inset-bottom, 8px)); left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 340px; z-index: 5;
+}
 .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--pad-gap); }
 .numpad-btn {
   aspect-ratio: 1.2; font-family: var(--font-display); font-size: clamp(1.4rem, 4vw, 2rem);
-  background: var(--btn-bg); color: var(--btn-text); border: 1.5px solid var(--btn-border);
-  border-radius: var(--btn-radius); cursor: pointer; transition: all 0.15s;
-  position: relative; overflow: hidden;
+  background: rgba(255, 255, 255, 0.05); color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--btn-radius);
+  cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden;
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
   user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
 }
-.numpad-btn:hover { background: var(--btn-hover); box-shadow: var(--btn-shadow); }
-.numpad-btn:active, .numpad-btn.pressing { animation: btn-press 0.15s ease-out; background: var(--btn-active); }
+.numpad-btn:hover { background: rgba(255, 255, 255, 0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.numpad-btn:active, .numpad-btn.pressing { animation: btn-press 0.15s ease-out; background: rgba(255, 255, 255, 0.25); }
 .numpad-btn.correct-flash { border-color: var(--success-color) !important; box-shadow: 0 0 20px rgba(0, 255, 136, 0.4) !important; }
 .numpad-btn.wrong-flash { border-color: var(--error-color) !important; box-shadow: 0 0 20px rgba(255, 51, 102, 0.5) !important; background: rgba(255, 51, 102, 0.2) !important; }
 .numpad-btn.zero-btn { grid-column: 2; }
@@ -432,80 +441,7 @@ body {
 
 /* ===== Theme-Specific Overrides ===== */
 
-/* Neural: beveled mechanical keys, inner glow line */
-[data-theme="neural"] .numpad-btn {
-  border-width: 1px;
-  box-shadow: inset 0 1px 0 rgba(0,229,255,0.12), 0 2px 6px rgba(0,0,0,0.5);
-}
-[data-theme="neural"] .numpad-btn::after {
-  content: ''; position: absolute; bottom: 0; left: 10%; right: 10%; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0,229,255,0.3), transparent);
-}
-[data-theme="neural"] .pi-prefix { font-weight: bold; }
-[data-theme="neural"] .start-screen .title {
-  text-shadow: 0 0 40px rgba(0,229,255,0.5), 0 0 80px rgba(255,0,229,0.2);
-}
-
-/* Blueprint: extruded technical buttons, precise borders, hatched active state */
-[data-theme="blueprint"] .numpad-btn {
-  border-width: 1.5px;
-  text-transform: none;
-  font-weight: 600;
-  box-shadow: 0 2px 0 rgba(74,192,232,0.15), inset 0 1px 0 rgba(74,192,232,0.06);
-}
-[data-theme="blueprint"] .numpad-btn:active,
-[data-theme="blueprint"] .numpad-btn.pressing {
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-  transform: translateY(1px);
-}
-[data-theme="blueprint"] .pi-display { letter-spacing: 0.05em; }
-[data-theme="blueprint"] .start-screen .title { letter-spacing: 0.15em; font-weight: 700; }
-[data-theme="blueprint"] .theme-btn { border-width: 1.5px; }
-
-/* Gallery: glassmorphism buttons, soft diffused shadows, elegant feel */
-[data-theme="gallery"] .numpad-btn {
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  border-width: 1px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
-  font-weight: 400; letter-spacing: 0.02em;
-}
-[data-theme="gallery"] .numpad-btn:hover {
-  box-shadow: 0 6px 24px rgba(0,0,0,0.06);
-}
-[data-theme="gallery"] .pi-display { font-style: italic; }
-[data-theme="gallery"] .pi-prefix { font-style: italic; }
-[data-theme="gallery"] .start-screen .title {
-  font-style: italic; letter-spacing: 0.05em;
-  text-shadow: none; color: #2c2c2c;
-}
-[data-theme="gallery"] .theme-btn {
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  border-width: 1px;
-}
-[data-theme="gallery"] .leaderboard,
-[data-theme="gallery"] .autopsy,
-[data-theme="gallery"] .gameover-leaderboard,
-[data-theme="gallery"] .study-chunk-card,
-[data-theme="gallery"] .practice-teleprompter,
-[data-theme="gallery"] .modal {
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  background: rgba(255,255,255,0.55);
-}
-
-/* Orbital: spherical buttons with inner light, digit floating effect */
-[data-theme="orbital"] .numpad-btn {
-  box-shadow:
-    0 0 16px rgba(124,92,252,0.15),
-    inset 0 -4px 10px rgba(0,0,0,0.3),
-    inset 0 4px 8px rgba(124,92,252,0.1);
-  border-width: 1px;
-}
-[data-theme="orbital"] .numpad-btn:hover {
-  box-shadow:
-    0 0 24px rgba(124,92,252,0.3),
-    inset 0 -4px 10px rgba(0,0,0,0.3),
-    inset 0 4px 10px rgba(124,92,252,0.15);
-}
+/* Removed theme specific overrides to maintain highly transparent, unobtrusive UI */
 [data-theme="orbital"] .start-screen .title {
   text-shadow: 0 0 30px rgba(124,92,252,0.5), 0 0 60px rgba(252,92,124,0.2);
 }
@@ -565,7 +501,7 @@ body {
 }
 
 /* ===== Particle Canvas ===== */
-#particle-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+#particle-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
 
 /* ===== Leaderboard Modal ===== */
 .modal-overlay {
@@ -621,6 +557,7 @@ body {
 .autopsy {
   width: 100%; max-width: 500px; background: var(--leaderboard-bg);
   border: 1px solid var(--leaderboard-border); border-radius: 12px; padding: 16px 20px;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
 .autopsy-header {
   font-family: var(--font-display); color: var(--accent); font-size: 0.8rem;
@@ -649,6 +586,7 @@ body {
 .gameover-leaderboard {
   width: 100%; max-width: 380px; background: var(--leaderboard-bg);
   border: 1px solid var(--leaderboard-border); border-radius: 12px; padding: 16px 20px;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
 
 .gameover-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
@@ -680,6 +618,7 @@ body {
   background: var(--leaderboard-bg); border: 1px solid var(--leaderboard-border);
   border-radius: 10px; padding: 14px; width: 100%; text-align: center;
   animation: study-chunk-in 0.3s ease-out;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
 .study-chunk-label { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
 .study-chunk-digits {
@@ -737,6 +676,7 @@ body {
   width: 100%; background: var(--leaderboard-bg); border: 1px solid var(--leaderboard-border);
   border-radius: 10px; padding: 12px 10px; position: relative; overflow: hidden;
   min-height: 80px; display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
 
 .practice-digits {
@@ -984,6 +924,11 @@ body {
   <button class="study-back-btn" id="study-back-btn">Home</button>
 </div>
 
+<script src="visuals/tracer.js"></script>
+<script src="visuals/spirograph.js"></script>
+<script src="visuals/gallery.js"></script>
+<script src="visuals/orbital.js"></script>
+<script src="visuals/manager.js"></script>
 <script>
 // ===== Brand Logo =====
 let logoIdCounter = 0;
@@ -1149,7 +1094,7 @@ function resizeCanvas() {
   resizeTimer = setTimeout(() => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    if (typeof bendyBoi !== 'undefined') bendyBoi.updateScreenSize();
+    if (typeof currentVisual !== 'undefined' && currentVisual) currentVisual.updateScreenSize();
   }, 150);
 }
 let resizeTimer;
@@ -1175,141 +1120,15 @@ function spawnErrorParticles(x, y) {
   for (let i = 0; i < 25; i++) { const p = new Particle(x, y, c); p.vx = (Math.random()-0.5)*14; p.vy = (Math.random()-0.5)*14; p.size = 3+Math.random()*5; particles.push(p); }
 }
 
-class BendyBoi {
-  constructor() { this.reset(); }
-  reset() {
-    this.x = window.innerWidth / 2; this.y = window.innerHeight / 2;
-    this.targetX = this.x; this.targetY = this.y;
-    this.history = []; this.bursts = []; this.moving = false;
-    this.updateScreenSize();
-  }
-  updateScreenSize() {
-    this.baseScale = Math.max(1, Math.min(window.innerWidth, window.innerHeight) / 400);
-    this.stepSize = 45 * this.baseScale;
-  }
-  feedDigit(digit, seqLen) {
-    if (this.history.length === 0 || this.history[0].x !== this.targetX || this.history[0].y !== this.targetY) {
-      this.history.unshift({x: this.targetX, y: this.targetY});
-    }
-    if (this.history.length > 50) this.history.pop();
-    if (digit === '5') {
-      this.bursts.push({x: this.targetX, y: this.targetY, age: 0, maxAge: 150});
-      this.moving = true;
-    } else if (digit === '0') {
-      const seed = seqLen * 1337.1337;
-      if (!state.cameraFollow) {
-        this.targetX = (Math.sin(seed) * 0.4 + 0.5) * window.innerWidth;
-        this.targetY = (Math.cos(seed) * 0.4 + 0.5) * window.innerHeight;
-      } else {
-        this.targetX += (Math.sin(seed) * 2 - 1) * window.innerWidth;
-        this.targetY += (Math.cos(seed) * 2 - 1) * window.innerHeight;
-      }
-      this.x = this.targetX; this.y = this.targetY;
-      this.history.unshift({x: this.x, y: this.y, teleport: true});
-      this.moving = true;
-    } else {
-      let dx = 0, dy = 0;
-      if (['1', '4', '7'].includes(digit)) dx = -1;
-      if (['3', '6', '9'].includes(digit)) dx = 1;
-      if (['1', '2', '3'].includes(digit)) dy = -1;
-      if (['7', '8', '9'].includes(digit)) dy = 1;
-      this.targetX += dx * this.stepSize; this.targetY += dy * this.stepSize;
-      if (!state.cameraFollow) {
-        if (this.targetX < 0) this.targetX += window.innerWidth;
-        if (this.targetX > window.innerWidth) this.targetX -= window.innerWidth;
-        if (this.targetY < 0) this.targetY += window.innerHeight;
-        if (this.targetY > window.innerHeight) this.targetY -= window.innerHeight;
-      }
-      this.moving = true;
-    }
-    ensureAnimationLoop();
-  }
-  update() {
-    let active = false;
-    const dx = this.targetX - this.x, dy = this.targetY - this.y;
-    if (Math.abs(dx) > window.innerWidth / 2 || Math.abs(dy) > window.innerHeight / 2) {
-      this.x = this.targetX; this.y = this.targetY;
-    } else {
-      this.x += dx * 0.25; this.y += dy * 0.25;
-    }
-    if (Math.abs(this.targetX - this.x) > 0.5 || Math.abs(this.targetY - this.y) > 0.5) { active = true; } 
-    else { this.x = this.targetX; this.y = this.targetY; }
-    for (let i = this.bursts.length - 1; i >= 0; i--) {
-      if (this.bursts[i].age < this.bursts[i].maxAge) {
-        this.bursts[i].age++;
-        active = true;
-      }
-    }
-    if (this.history.length > 0) active = true;
-    this.moving = active; return active;
-  }
-  draw(ctx) {
-    if (this.history.length === 0 && this.bursts.length === 0 && !this.moving) return;
-    const theme = document.body.getAttribute('data-theme'), computed = getComputedStyle(document.body);
-    const accent = computed.getPropertyValue('--accent').trim() || '#00e5ff';
-    const accentSec = computed.getPropertyValue('--accent-secondary').trim() || '#ff00e5';
-    const bs = this.baseScale || 1;
-    ctx.save();
-    if (state.cameraFollow) {
-      ctx.translate(window.innerWidth / 2 - this.x, window.innerHeight / 2 - this.y);
-    }
-    this.bursts.forEach(b => {
-      const progress = b.age / b.maxAge;
-      ctx.globalAlpha = Math.max(0.15, 1 - Math.pow(progress, 2));
-      ctx.strokeStyle = accentSec; ctx.lineWidth = (2 + (1 - progress) * 2) * bs;
-      ctx.beginPath();
-      const r = (10 + Math.pow(progress, 0.5) * 60) * bs;
-      if (theme === 'neural') {
-        for (let i = 0; i < 6; i++) {
-          const angle = (Math.PI / 3) * i;
-          const px = b.x + Math.cos(angle) * r, py = b.y + Math.sin(angle) * r;
-          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-        }
-        ctx.closePath();
-      } else if (theme === 'blueprint') {
-        ctx.moveTo(b.x - r, b.y); ctx.lineTo(b.x + r, b.y);
-        ctx.moveTo(b.x, b.y - r); ctx.lineTo(b.x, b.y + r);
-        ctx.arc(b.x, b.y, r * 0.4, 0, Math.PI * 2);
-      } else if (theme === 'gallery') {
-        ctx.arc(b.x, b.y, r * 0.8, 0, Math.PI * 2); ctx.fillStyle = accentSec;
-        ctx.globalAlpha = (1 - progress) * 0.2; ctx.fill(); ctx.globalAlpha = 1 - Math.pow(progress, 2);
-      } else { ctx.arc(b.x, b.y, r, 0, Math.PI * 2); }
-      ctx.stroke();
-    });
-    if (this.history.length > 0) {
-      ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.globalAlpha = 0.6;
-      if (theme === 'neural') { ctx.shadowColor = accent; ctx.shadowBlur = 12 * bs; ctx.strokeStyle = accent; ctx.lineWidth = 3 * bs; }
-      else if (theme === 'blueprint') { ctx.setLineDash([8 * bs, 6 * bs]); ctx.strokeStyle = accent; ctx.lineWidth = 2 * bs; }
-      else if (theme === 'gallery') { ctx.strokeStyle = accentSec; ctx.lineWidth = 8 * bs; ctx.globalAlpha = 0.4; }
-      else if (theme === 'orbital') { ctx.shadowColor = accentSec; ctx.shadowBlur = 20 * bs; ctx.strokeStyle = accentSec; ctx.lineWidth = 4 * bs; }
-      ctx.beginPath(); let lastPt = {x: this.x, y: this.y}; ctx.moveTo(this.x, this.y);
-      for (let i = 0; i < this.history.length; i++) {
-        const pt = this.history[i];
-        if (pt.teleport) { ctx.stroke(); ctx.beginPath(); ctx.moveTo(pt.x, pt.y); }
-        else {
-           if (Math.abs(pt.x - lastPt.x) > window.innerWidth/2 || Math.abs(pt.y - lastPt.y) > window.innerHeight/2) {
-             ctx.stroke(); ctx.beginPath(); ctx.moveTo(pt.x, pt.y);
-           } else { ctx.lineTo(pt.x, pt.y); }
-        }
-        lastPt = pt;
-      }
-      ctx.stroke(); ctx.setLineDash([]); ctx.shadowBlur = 0; ctx.globalAlpha = 1;
-    }
-    ctx.beginPath(); ctx.fillStyle = accent; ctx.arc(this.x, this.y, (theme === 'gallery' ? 8 : 5) * bs, 0, Math.PI * 2);
-    if (theme === 'neural' || theme === 'orbital') { ctx.shadowColor = accent; ctx.shadowBlur = 15 * bs; }
-    ctx.fill(); ctx.restore();
-  }
-}
-
-const bendyBoi = new BendyBoi();
+/* Embedded visual classes replaced by modular scripts */
 
 let animationFrameId = null;
 function animateParticles() {
   pctx.clearRect(0, 0, canvas.width, canvas.height);
   particles = particles.filter(p => p.life > 0);
   particles.forEach(p => { p.update(); p.draw(pctx); }); pctx.globalAlpha = 1;
-  const bendyActive = bendyBoi.update();
-  bendyBoi.draw(pctx);
+  const bendyActive = currentVisual ? currentVisual.update() : false;
+  if (currentVisual) currentVisual.draw(pctx);
   if (particles.length > 0 || bendyActive) {
     animationFrameId = requestAnimationFrame(animateParticles);
   } else {
@@ -1412,6 +1231,7 @@ function applyTheme(t) {
   document.body.setAttribute('data-theme', t); state.currentTheme = t;
   $themeButtons.forEach(b => b.classList.toggle('selected', b.dataset.themeChoice === t));
   saveState();
+  initVisual();
 }
 $themeButtons.forEach(b => b.addEventListener('click', () => applyTheme(b.dataset.themeChoice)));
 
@@ -1440,7 +1260,7 @@ function startGame() {
   state.gameState = 'PLAYING'; state.userSequence = ''; state.startTime = null;
   comboLevel = 0; lastPressTime = 0; saveState(); renderPiDigits();
   $timerDisplay.textContent = '0.0s'; showScreen('game-screen');
-  if (typeof bendyBoi !== 'undefined') bendyBoi.reset();
+  if (typeof currentVisual !== 'undefined' && currentVisual) currentVisual.reset();
 }
 
 function handleDigitPress(digit, btn) {
@@ -1457,7 +1277,7 @@ function handleDigitPress(digit, btn) {
     btn.classList.add('correct-flash'); setTimeout(() => btn.classList.remove('correct-flash'), 200);
     document.body.classList.add('shake-correct'); setTimeout(() => document.body.classList.remove('shake-correct'), 150);
     triggerParticles(btn, getComputedStyle(document.body).getPropertyValue('--success-color').trim());
-    if (typeof bendyBoi !== 'undefined') bendyBoi.feedDigit(digit, state.userSequence.length);
+    if (typeof currentVisual !== 'undefined' && currentVisual) currentVisual.feedDigit(digit, state.userSequence.length);
   } else { gameOver(btn); }
 }
 
@@ -1556,7 +1376,7 @@ function enterPractice() {
   practicePos = 0;
   $studyReadArea.style.display = 'none';
   $practiceArea.classList.add('active');
-  if (typeof bendyBoi !== 'undefined') bendyBoi.reset();
+  if (typeof currentVisual !== 'undefined' && currentVisual) currentVisual.reset();
   renderPractice();
 }
 
@@ -1594,7 +1414,7 @@ function handlePracticePress(digit, btn) {
     practicePos++;
     playPracticeCorrect();
     btn.classList.add('correct-flash'); setTimeout(() => btn.classList.remove('correct-flash'), 150);
-    if (typeof bendyBoi !== 'undefined') bendyBoi.feedDigit(digit, practiceRangeStart + practicePos);
+    if (typeof currentVisual !== 'undefined' && currentVisual) currentVisual.feedDigit(digit, practiceRangeStart + practicePos);
     renderPractice();
     if (practicePos >= practiceDigitsStr.length) {
       $practiceProgress.textContent = 'Complete!';
@@ -1609,7 +1429,7 @@ function handlePracticePress(digit, btn) {
 }
 
 $studyPracticeBtn.addEventListener('click', enterPractice);
-$practiceRestart.addEventListener('click', () => { practicePos = 0; if (typeof bendyBoi !== 'undefined') bendyBoi.reset(); renderPractice(); });
+$practiceRestart.addEventListener('click', () => { practicePos = 0; if (typeof currentVisual !== 'undefined' && currentVisual) currentVisual.reset(); renderPractice(); });
 $practiceBackBtn.addEventListener('click', () => {
   $practiceArea.classList.remove('active'); $studyReadArea.style.display = ''; renderStudy();
 });
