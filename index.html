@@ -842,6 +842,7 @@ body {
 
 <!-- Top Toolbar -->
 <div class="toolbar">
+  <button class="toolbar-btn" id="btn-camera" title="Toggle camera (Follow/Wrap)">&#x1F3A5;</button>
   <button class="toolbar-btn" id="btn-study" title="Study Pi"><span class="pi-sym">&pi;</span></button>
   <button class="toolbar-btn" id="btn-leaderboard" title="Leaderboard">&#x1F3C6;</button>
   <button class="toolbar-btn" id="btn-sound" title="Toggle sound">&#x1F50A;</button>
@@ -1074,7 +1075,7 @@ const PI_DIGITS = '1415926535897932384626433832795028841971693993751058209749445
 // ===== State =====
 const DEFAULT_STATE = {
   gameState: 'MENU', currentTheme: 'neural', piSequence: PI_DIGITS,
-  userSequence: '', startTime: null, leaderboard: [], soundEnabled: true
+  userSequence: '', startTime: null, leaderboard: [], soundEnabled: true, cameraFollow: false
 };
 let state = { ...DEFAULT_STATE };
 let timerInterval = null, lastPressTime = 0, comboLevel = 0, lastGameScore = 0;
@@ -1148,6 +1149,7 @@ function resizeCanvas() {
   resizeTimer = setTimeout(() => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    if (typeof bendyBoi !== 'undefined') bendyBoi.updateScreenSize();
   }, 150);
 }
 let resizeTimer;
@@ -1164,7 +1166,7 @@ class Particle {
   update() { this.x += this.vx; this.y += this.vy; this.vy += 0.1; this.life -= this.decay; }
   draw(c) {
     c.globalAlpha = Math.max(0, this.life); c.fillStyle = this.color;
-    c.beginPath(); c.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.arc(this.x, this.y, Math.max(0, this.size * this.life), 0, Math.PI * 2); c.fill();
   }
 }
 function spawnParticles(x, y, color, count = 12) { for (let i = 0; i < count; i++) particles.push(new Particle(x, y, color)); }
@@ -1172,21 +1174,161 @@ function spawnErrorParticles(x, y) {
   const c = getComputedStyle(document.body).getPropertyValue('--error-color').trim();
   for (let i = 0; i < 25; i++) { const p = new Particle(x, y, c); p.vx = (Math.random()-0.5)*14; p.vy = (Math.random()-0.5)*14; p.size = 3+Math.random()*5; particles.push(p); }
 }
+
+class BendyBoi {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = window.innerWidth / 2; this.y = window.innerHeight / 2;
+    this.targetX = this.x; this.targetY = this.y;
+    this.history = []; this.bursts = []; this.moving = false;
+    this.updateScreenSize();
+  }
+  updateScreenSize() {
+    this.baseScale = Math.max(1, Math.min(window.innerWidth, window.innerHeight) / 400);
+    this.stepSize = 45 * this.baseScale;
+  }
+  feedDigit(digit, seqLen) {
+    if (this.history.length === 0 || this.history[0].x !== this.targetX || this.history[0].y !== this.targetY) {
+      this.history.unshift({x: this.targetX, y: this.targetY});
+    }
+    if (this.history.length > 50) this.history.pop();
+    if (digit === '5') {
+      this.bursts.push({x: this.targetX, y: this.targetY, age: 0, maxAge: 150});
+      this.moving = true;
+    } else if (digit === '0') {
+      const seed = seqLen * 1337.1337;
+      if (!state.cameraFollow) {
+        this.targetX = (Math.sin(seed) * 0.4 + 0.5) * window.innerWidth;
+        this.targetY = (Math.cos(seed) * 0.4 + 0.5) * window.innerHeight;
+      } else {
+        this.targetX += (Math.sin(seed) * 2 - 1) * window.innerWidth;
+        this.targetY += (Math.cos(seed) * 2 - 1) * window.innerHeight;
+      }
+      this.x = this.targetX; this.y = this.targetY;
+      this.history.unshift({x: this.x, y: this.y, teleport: true});
+      this.moving = true;
+    } else {
+      let dx = 0, dy = 0;
+      if (['1', '4', '7'].includes(digit)) dx = -1;
+      if (['3', '6', '9'].includes(digit)) dx = 1;
+      if (['1', '2', '3'].includes(digit)) dy = -1;
+      if (['7', '8', '9'].includes(digit)) dy = 1;
+      this.targetX += dx * this.stepSize; this.targetY += dy * this.stepSize;
+      if (!state.cameraFollow) {
+        if (this.targetX < 0) this.targetX += window.innerWidth;
+        if (this.targetX > window.innerWidth) this.targetX -= window.innerWidth;
+        if (this.targetY < 0) this.targetY += window.innerHeight;
+        if (this.targetY > window.innerHeight) this.targetY -= window.innerHeight;
+      }
+      this.moving = true;
+    }
+    ensureAnimationLoop();
+  }
+  update() {
+    let active = false;
+    const dx = this.targetX - this.x, dy = this.targetY - this.y;
+    if (Math.abs(dx) > window.innerWidth / 2 || Math.abs(dy) > window.innerHeight / 2) {
+      this.x = this.targetX; this.y = this.targetY;
+    } else {
+      this.x += dx * 0.25; this.y += dy * 0.25;
+    }
+    if (Math.abs(this.targetX - this.x) > 0.5 || Math.abs(this.targetY - this.y) > 0.5) { active = true; } 
+    else { this.x = this.targetX; this.y = this.targetY; }
+    for (let i = this.bursts.length - 1; i >= 0; i--) {
+      if (this.bursts[i].age < this.bursts[i].maxAge) {
+        this.bursts[i].age++;
+        active = true;
+      }
+    }
+    if (this.history.length > 0) active = true;
+    this.moving = active; return active;
+  }
+  draw(ctx) {
+    if (this.history.length === 0 && this.bursts.length === 0 && !this.moving) return;
+    const theme = document.body.getAttribute('data-theme'), computed = getComputedStyle(document.body);
+    const accent = computed.getPropertyValue('--accent').trim() || '#00e5ff';
+    const accentSec = computed.getPropertyValue('--accent-secondary').trim() || '#ff00e5';
+    const bs = this.baseScale || 1;
+    ctx.save();
+    if (state.cameraFollow) {
+      ctx.translate(window.innerWidth / 2 - this.x, window.innerHeight / 2 - this.y);
+    }
+    this.bursts.forEach(b => {
+      const progress = b.age / b.maxAge;
+      ctx.globalAlpha = Math.max(0.15, 1 - Math.pow(progress, 2));
+      ctx.strokeStyle = accentSec; ctx.lineWidth = (2 + (1 - progress) * 2) * bs;
+      ctx.beginPath();
+      const r = (10 + Math.pow(progress, 0.5) * 60) * bs;
+      if (theme === 'neural') {
+        for (let i = 0; i < 6; i++) {
+          const angle = (Math.PI / 3) * i;
+          const px = b.x + Math.cos(angle) * r, py = b.y + Math.sin(angle) * r;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+      } else if (theme === 'blueprint') {
+        ctx.moveTo(b.x - r, b.y); ctx.lineTo(b.x + r, b.y);
+        ctx.moveTo(b.x, b.y - r); ctx.lineTo(b.x, b.y + r);
+        ctx.arc(b.x, b.y, r * 0.4, 0, Math.PI * 2);
+      } else if (theme === 'gallery') {
+        ctx.arc(b.x, b.y, r * 0.8, 0, Math.PI * 2); ctx.fillStyle = accentSec;
+        ctx.globalAlpha = (1 - progress) * 0.2; ctx.fill(); ctx.globalAlpha = 1 - Math.pow(progress, 2);
+      } else { ctx.arc(b.x, b.y, r, 0, Math.PI * 2); }
+      ctx.stroke();
+    });
+    if (this.history.length > 0) {
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.globalAlpha = 0.6;
+      if (theme === 'neural') { ctx.shadowColor = accent; ctx.shadowBlur = 12 * bs; ctx.strokeStyle = accent; ctx.lineWidth = 3 * bs; }
+      else if (theme === 'blueprint') { ctx.setLineDash([8 * bs, 6 * bs]); ctx.strokeStyle = accent; ctx.lineWidth = 2 * bs; }
+      else if (theme === 'gallery') { ctx.strokeStyle = accentSec; ctx.lineWidth = 8 * bs; ctx.globalAlpha = 0.4; }
+      else if (theme === 'orbital') { ctx.shadowColor = accentSec; ctx.shadowBlur = 20 * bs; ctx.strokeStyle = accentSec; ctx.lineWidth = 4 * bs; }
+      ctx.beginPath(); let lastPt = {x: this.x, y: this.y}; ctx.moveTo(this.x, this.y);
+      for (let i = 0; i < this.history.length; i++) {
+        const pt = this.history[i];
+        if (pt.teleport) { ctx.stroke(); ctx.beginPath(); ctx.moveTo(pt.x, pt.y); }
+        else {
+           if (Math.abs(pt.x - lastPt.x) > window.innerWidth/2 || Math.abs(pt.y - lastPt.y) > window.innerHeight/2) {
+             ctx.stroke(); ctx.beginPath(); ctx.moveTo(pt.x, pt.y);
+           } else { ctx.lineTo(pt.x, pt.y); }
+        }
+        lastPt = pt;
+      }
+      ctx.stroke(); ctx.setLineDash([]); ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+    }
+    ctx.beginPath(); ctx.fillStyle = accent; ctx.arc(this.x, this.y, (theme === 'gallery' ? 8 : 5) * bs, 0, Math.PI * 2);
+    if (theme === 'neural' || theme === 'orbital') { ctx.shadowColor = accent; ctx.shadowBlur = 15 * bs; }
+    ctx.fill(); ctx.restore();
+  }
+}
+
+const bendyBoi = new BendyBoi();
+
+let animationFrameId = null;
 function animateParticles() {
   pctx.clearRect(0, 0, canvas.width, canvas.height);
   particles = particles.filter(p => p.life > 0);
   particles.forEach(p => { p.update(); p.draw(pctx); }); pctx.globalAlpha = 1;
-  if (particles.length > 0) requestAnimationFrame(animateParticles);
+  const bendyActive = bendyBoi.update();
+  bendyBoi.draw(pctx);
+  if (particles.length > 0 || bendyActive) {
+    animationFrameId = requestAnimationFrame(animateParticles);
+  } else {
+    animationFrameId = null;
+  }
 }
+function ensureAnimationLoop() {
+  if (!animationFrameId) animationFrameId = requestAnimationFrame(animateParticles);
+}
+
 function triggerParticles(el, color) {
   const r = el.getBoundingClientRect();
   spawnParticles(r.left + r.width/2, r.top + r.height/2, color, Math.min(8 + comboLevel*3, 30));
-  requestAnimationFrame(animateParticles);
+  ensureAnimationLoop();
 }
 function triggerErrorParticles(el) {
   const r = el.getBoundingClientRect();
   spawnErrorParticles(r.left + r.width/2, r.top + r.height/2);
-  requestAnimationFrame(animateParticles);
+  ensureAnimationLoop();
 }
 
 // ===== Persistence =====
@@ -1207,7 +1349,7 @@ const $numpad = $('numpad'), $startBtn = $('start-btn'), $retryBtn = $('retry-bt
 const $finalScore = $('final-score'), $finalTime = $('final-time');
 const $leaderboardList = $('leaderboard-list'), $gameoverLbList = $('gameover-leaderboard-list');
 const $themeButtons = document.querySelectorAll('.theme-btn');
-const $btnSound = $('btn-sound'), $btnLeaderboard = $('btn-leaderboard'), $btnStudy = $('btn-study');
+const $btnSound = $('btn-sound'), $btnLeaderboard = $('btn-leaderboard'), $btnStudy = $('btn-study'), $btnCamera = $('btn-camera');
 const $lbModal = $('leaderboard-modal'), $modalClose = $('modal-close');
 const $autopsy = $('autopsy'), $autopsyDisplay = $('autopsy-display');
 const $autopsyLabel = $('autopsy-label'), $autopsyStudyLink = $('autopsy-study-link');
@@ -1225,12 +1367,18 @@ const $practiceRestart = $('practice-restart'), $practiceBackBtn = $('practice-b
 const allScreens = [$startScreen, $gameScreen, $gameoverScreen, $studyScreen];
 function showScreen(id) { allScreens.forEach(s => s.classList.remove('active')); $(id).classList.add('active'); }
 
-// ===== Sound Toggle =====
+// ===== Sound & Camera Toggle =====
 function updateSoundBtn() {
   $btnSound.innerHTML = state.soundEnabled ? '&#x1F50A;' : '&#x1F507;';
   $btnSound.classList.toggle('muted', !state.soundEnabled);
 }
 $btnSound.addEventListener('click', () => { state.soundEnabled = !state.soundEnabled; updateSoundBtn(); saveState(); });
+
+function updateCameraBtn() {
+  $btnCamera.classList.toggle('active', state.cameraFollow);
+  $btnCamera.classList.toggle('muted', !state.cameraFollow);
+}
+$btnCamera.addEventListener('click', () => { state.cameraFollow = !state.cameraFollow; updateCameraBtn(); saveState(); });
 
 // ===== Leaderboard Modal =====
 function renderLeaderboard(target) {
@@ -1292,6 +1440,7 @@ function startGame() {
   state.gameState = 'PLAYING'; state.userSequence = ''; state.startTime = null;
   comboLevel = 0; lastPressTime = 0; saveState(); renderPiDigits();
   $timerDisplay.textContent = '0.0s'; showScreen('game-screen');
+  if (typeof bendyBoi !== 'undefined') bendyBoi.reset();
 }
 
 function handleDigitPress(digit, btn) {
@@ -1308,6 +1457,7 @@ function handleDigitPress(digit, btn) {
     btn.classList.add('correct-flash'); setTimeout(() => btn.classList.remove('correct-flash'), 200);
     document.body.classList.add('shake-correct'); setTimeout(() => document.body.classList.remove('shake-correct'), 150);
     triggerParticles(btn, getComputedStyle(document.body).getPropertyValue('--success-color').trim());
+    if (typeof bendyBoi !== 'undefined') bendyBoi.feedDigit(digit, state.userSequence.length);
   } else { gameOver(btn); }
 }
 
@@ -1406,6 +1556,7 @@ function enterPractice() {
   practicePos = 0;
   $studyReadArea.style.display = 'none';
   $practiceArea.classList.add('active');
+  if (typeof bendyBoi !== 'undefined') bendyBoi.reset();
   renderPractice();
 }
 
@@ -1443,6 +1594,7 @@ function handlePracticePress(digit, btn) {
     practicePos++;
     playPracticeCorrect();
     btn.classList.add('correct-flash'); setTimeout(() => btn.classList.remove('correct-flash'), 150);
+    if (typeof bendyBoi !== 'undefined') bendyBoi.feedDigit(digit, practiceRangeStart + practicePos);
     renderPractice();
     if (practicePos >= practiceDigitsStr.length) {
       $practiceProgress.textContent = 'Complete!';
@@ -1457,7 +1609,7 @@ function handlePracticePress(digit, btn) {
 }
 
 $studyPracticeBtn.addEventListener('click', enterPractice);
-$practiceRestart.addEventListener('click', () => { practicePos = 0; renderPractice(); });
+$practiceRestart.addEventListener('click', () => { practicePos = 0; if (typeof bendyBoi !== 'undefined') bendyBoi.reset(); renderPractice(); });
 $practiceBackBtn.addEventListener('click', () => {
   $practiceArea.classList.remove('active'); $studyReadArea.style.display = ''; renderStudy();
 });
@@ -1527,7 +1679,7 @@ $retryBtn.addEventListener('click', () => { state.gameState = 'MENU'; saveState(
 
 // ===== Init =====
 function init() {
-  loadState(); applyTheme(state.currentTheme); updateSoundBtn(); buildRangeButtons();
+  loadState(); applyTheme(state.currentTheme); updateSoundBtn(); updateCameraBtn(); buildRangeButtons();
   placeBrandLogos(); generateAppIcons();
   if (state.gameState === 'PLAYING' && state.userSequence.length > 0) {
     renderPiDigits();
