@@ -86,7 +86,42 @@ class GalleryVisual {
     this.spiralStep++;
 
     this.updateCamera();
+    this.maybeRenormalize();
     ensureAnimationLoop();
+  }
+
+  maybeRenormalize() {
+    const threshold = 8;
+    const peakZ = Math.max(this.zoomScale, this.targetZoomScale);
+    if (peakZ <= threshold) return;
+
+    const k = peakZ;
+    const tx = this.focusX, ty = this.focusY;
+
+    const remap = (o) => {
+      o.x = (o.x - tx) * k;
+      o.y = (o.y - ty) * k;
+      o.w *= k;
+      o.h *= k;
+    };
+    for (const r of this.rects) {
+      remap(r);
+      const a = r.arc;
+      if (a) {
+        a.cx = (a.cx - tx) * k; a.cy = (a.cy - ty) * k; a.r *= k;
+        a.p1x = (a.p1x - tx) * k; a.p1y = (a.p1y - ty) * k;
+        a.p2x = (a.p2x - tx) * k; a.p2y = (a.p2y - ty) * k;
+      }
+    }
+    remap(this.currentRect);
+    remap(this.outerRect);
+
+    this.targetFocusX = (this.targetFocusX - tx) * k;
+    this.targetFocusY = (this.targetFocusY - ty) * k;
+    this.focusX = 0;
+    this.focusY = 0;
+    this.zoomScale /= k;
+    this.targetZoomScale /= k;
   }
 
   updateCamera() {
@@ -165,23 +200,31 @@ class GalleryVisual {
       ctx.strokeRect(oR.x, oR.y, oR.w, oR.h);
     }
 
+    const maxScreenSpan = Math.max(W, H) * 4;
     let firstVisible = n;
     let endIdx = 0;
     for (let i = 0; i < n; i++) {
       const r = rects[i];
       if (r.w * zs < 0.5) break;
+      if (r.w * zs > maxScreenSpan) continue;
       if (r.x + r.w < vL || r.x > vR || r.y + r.h < vT || r.y > vB) continue;
       if (firstVisible === n) firstVisible = i;
       endIdx = i + 1;
     }
 
     ctx.globalAlpha = 0.62;
-    for (let i = firstVisible; i < endIdx; i++) {
+    for (let i = 0; i < n; i++) {
       const r = rects[i];
+      if (r.w * zs < 0.5) break;
+      if (!r.color) continue;
       if (r.x + r.w < vL || r.x > vR || r.y + r.h < vT || r.y > vB) continue;
-      if (r.color) {
+      const cx = Math.max(r.x, vL);
+      const cy = Math.max(r.y, vT);
+      const cw = Math.min(r.x + r.w, vR) - cx;
+      const ch = Math.min(r.y + r.h, vB) - cy;
+      if (cw > 0 && ch > 0) {
         ctx.fillStyle = r.color;
-        ctx.fillRect(r.x, r.y, r.w, r.h);
+        ctx.fillRect(cx, cy, cw, ch);
       }
     }
     ctx.globalAlpha = 1;
