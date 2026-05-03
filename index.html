@@ -785,7 +785,6 @@ body {
 
 <!-- Top Toolbar -->
 <div class="toolbar">
-  <button class="toolbar-btn" id="btn-camera" title="Toggle camera (Follow/Wrap)">&#x1F3A5;</button>
   <button class="toolbar-btn" id="btn-study" title="Study Pi"><span class="pi-sym">&pi;</span></button>
   <button class="toolbar-btn" id="btn-leaderboard" title="Leaderboard">&#x1F3C6;</button>
   <button class="toolbar-btn" id="btn-sound" title="Toggle sound">&#x1F50A;</button>
@@ -1171,7 +1170,7 @@ const $numpad = $('numpad'), $startBtn = $('start-btn'), $retryBtn = $('retry-bt
 const $finalScore = $('final-score'), $finalTime = $('final-time');
 const $leaderboardList = $('leaderboard-list'), $gameoverLbList = $('gameover-leaderboard-list');
 const $themeButtons = document.querySelectorAll('.theme-btn');
-const $btnSound = $('btn-sound'), $btnLeaderboard = $('btn-leaderboard'), $btnStudy = $('btn-study'), $btnCamera = $('btn-camera');
+const $btnSound = $('btn-sound'), $btnLeaderboard = $('btn-leaderboard'), $btnStudy = $('btn-study');
 const $lbModal = $('leaderboard-modal'), $modalClose = $('modal-close');
 const $autopsy = $('autopsy'), $autopsyDisplay = $('autopsy-display');
 const $autopsyLabel = $('autopsy-label'), $autopsyStudyLink = $('autopsy-study-link');
@@ -1189,18 +1188,12 @@ const $practiceRestart = $('practice-restart'), $practiceBackBtn = $('practice-b
 const allScreens = [$startScreen, $gameScreen, $gameoverScreen, $studyScreen];
 function showScreen(id) { allScreens.forEach(s => s.classList.remove('active')); $(id).classList.add('active'); }
 
-// ===== Sound & Camera Toggle =====
+// ===== Sound Toggle =====
 function updateSoundBtn() {
   $btnSound.innerHTML = state.soundEnabled ? '&#x1F50A;' : '&#x1F507;';
   $btnSound.classList.toggle('muted', !state.soundEnabled);
 }
 $btnSound.addEventListener('click', () => { state.soundEnabled = !state.soundEnabled; updateSoundBtn(); saveState(); });
-
-function updateCameraBtn() {
-  $btnCamera.classList.toggle('active', state.cameraFollow);
-  $btnCamera.classList.toggle('muted', !state.cameraFollow);
-}
-$btnCamera.addEventListener('click', () => { state.cameraFollow = !state.cameraFollow; updateCameraBtn(); saveState(); });
 
 // ===== Leaderboard Modal =====
 function renderLeaderboard(target) {
@@ -1502,7 +1495,7 @@ $retryBtn.addEventListener('click', () => { state.gameState = 'MENU'; saveState(
 
 // ===== Init =====
 function init() {
-  loadState(); applyTheme(state.currentTheme); updateSoundBtn(); updateCameraBtn(); buildRangeButtons();
+  loadState(); applyTheme(state.currentTheme); updateSoundBtn(); buildRangeButtons();
   placeBrandLogos(); generateAppIcons();
   if (state.gameState === 'PLAYING' && state.userSequence.length > 0) {
     renderPiDigits();
