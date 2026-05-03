@@ -48,11 +48,6 @@ class GalleryVisual {
   feedDigit(digit, seqLen) {
     this.moving = true;
 
-    if (this.rects.length >= 24) {
-      ensureAnimationLoop();
-      return;
-    }
-
     const r = this.currentRect;
     if (r.w < 1e-6 || r.h < 1e-6) {
       ensureAnimationLoop();
@@ -111,9 +106,7 @@ class GalleryVisual {
     const w = maxX - minX, h = maxY - minY;
     this.targetFocusX = (minX + maxX) / 2;
     this.targetFocusY = (minY + maxY) / 2;
-    const baseZoom = Math.max(window.innerWidth, window.innerHeight) / Math.max(this.outerRect.w, this.outerRect.h);
-    const maxZoom = baseZoom * 1500;
-    this.targetZoomScale = Math.min(window.innerWidth / w, window.innerHeight / h, maxZoom);
+    this.targetZoomScale = Math.min(window.innerWidth / w, window.innerHeight / h);
   }
 
   update() {
@@ -123,11 +116,12 @@ class GalleryVisual {
       this.zoomScale += (this.targetZoomScale - this.zoomScale) * zRate;
       active = true;
     }
-    if (Math.abs(this.focusX - this.targetFocusX) > 0.3) {
+    const focusThresh = 0.3 / Math.max(this.zoomScale, 1);
+    if (Math.abs(this.focusX - this.targetFocusX) > focusThresh) {
       this.focusX += (this.targetFocusX - this.focusX) * fRate;
       active = true;
     }
-    if (Math.abs(this.focusY - this.targetFocusY) > 0.3) {
+    if (Math.abs(this.focusY - this.targetFocusY) > focusThresh) {
       this.focusY += (this.targetFocusY - this.focusY) * fRate;
       active = true;
     }

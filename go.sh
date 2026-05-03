@@ -4,7 +4,7 @@ set -euo pipefail
 DIR="$(cd "$(dirname "$0")" && pwd)"
 PID_FILE="$DIR/.go.pid"
 LOG_FILE="$DIR/.go.log"
-PORT=8789
+PORT=8790
 
 # Kill previous run if pid file exists
 if [ -f "$PID_FILE" ]; then
