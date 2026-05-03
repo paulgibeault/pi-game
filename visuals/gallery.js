@@ -1,108 +1,370 @@
 class GalleryVisual {
   constructor() { this.reset(); }
   reset() {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
     this.rects = [];
-    this.currentRect = {x: -w/2, y: -h/2, w: w, h: h};
-    this.moving = false; this.updateScreenSize();
+    this.spiralStep = 0;
+    this.updateScreenSize();
+
+    const phi = 1.618033988749895;
+    const w = window.innerWidth, h = window.innerHeight;
+    let rectW, rectH;
+    if (w / h > phi) {
+      rectH = h * 0.78;
+      rectW = rectH * phi;
+    } else {
+      rectW = w * 0.78;
+      rectH = rectW / phi;
+    }
+    this.currentRect = { x: -rectW / 2, y: -rectH / 2, w: rectW, h: rectH };
+    this.outerRect = { ...this.currentRect };
+
     this.zoomScale = 1; this.targetZoomScale = 1;
     this.focusX = 0; this.focusY = 0;
     this.targetFocusX = 0; this.targetFocusY = 0;
+    this.moving = false;
+    this.updateCamera();
+    this.zoomScale = this.targetZoomScale;
+    this.focusX = this.targetFocusX;
+    this.focusY = this.targetFocusY;
   }
   updateScreenSize() { this.bs = Math.max(1, Math.min(window.innerWidth, window.innerHeight) / 400); }
+
+  digitColor(digit) {
+    const palette = {
+      '0': '#f0d8a0',
+      '1': '#b53024',
+      '2': '#d8702a',
+      '3': '#ecb022',
+      '4': '#5a9030',
+      '5': '#1f5099',
+      '6': '#3895c4',
+      '7': '#7038a0',
+      '8': '#3a2410',
+      '9': '#dc3010'
+    };
+    return palette[digit] || '#6b4a2e';
+  }
+
   feedDigit(digit, seqLen) {
     this.moving = true;
-    if (digit === '0') {
-      this.reset();
-    } else if (digit === '5') {
-      if (this.rects.length > 0) {
-        const colors = ['#c0392b', '#2980b9', '#f39c12', '#2c3e50'];
-        this.rects[this.rects.length - 1].color = colors[seqLen % colors.length];
+
+    const r = this.currentRect;
+    if (r.w < 1e-6 || r.h < 1e-6) {
+      ensureAnimationLoop();
+      return;
+    }
+    const step = this.spiralStep % 4;
+    let square, nextRect;
+
+    if (r.w >= r.h) {
+      const size = r.h;
+      if (step === 0) {
+        square = { x: r.x, y: r.y, w: size, h: size };
+        nextRect = { x: r.x + size, y: r.y, w: r.w - size, h: r.h };
+      } else {
+        square = { x: r.x + r.w - size, y: r.y, w: size, h: size };
+        nextRect = { x: r.x, y: r.y, w: r.w - size, h: r.h };
       }
     } else {
-      const phi = 0.61803398875;
-      const r = this.currentRect;
-      let square = {x: r.x, y: r.y, w: 0, h: 0, color: null};
-      let nextRect = {x: 0, y: 0, w: 0, h: 0};
-      
-      const dir = parseInt(digit) % 4; // 0: left, 1: top, 2: right, 3: bottom
-      
-      if (r.w >= r.h) {
-        const size = r.w * (1 - phi);
-        square.w = size; square.h = r.h;
-        nextRect.w = r.w - size; nextRect.h = r.h;
-        if (dir % 2 === 0) { // left
-          square.x = r.x; nextRect.x = r.x + size; nextRect.y = r.y;
-        } else { // right
-          square.x = r.x + nextRect.w; nextRect.x = r.x; nextRect.y = r.y;
-        }
+      const size = r.w;
+      if (step === 1) {
+        square = { x: r.x, y: r.y, w: size, h: size };
+        nextRect = { x: r.x, y: r.y + size, w: r.w, h: r.h - size };
       } else {
-        const size = r.h * (1 - phi);
-        square.w = r.w; square.h = size;
-        nextRect.w = r.w; nextRect.h = r.h - size;
-        if (dir % 2 === 0) { // top
-          square.y = r.y; nextRect.x = r.x; nextRect.y = r.y + size;
-        } else { // bottom
-          square.y = r.y + nextRect.h; nextRect.x = r.x; nextRect.y = r.y;
-        }
-      }
-      this.rects.push(square);
-      this.currentRect = nextRect;
-      
-      // Update target zoom and focus to keep the current rect in view
-      if (state.cameraFollow) {
-         this.targetFocusX = this.currentRect.x + this.currentRect.w / 2;
-         this.targetFocusY = this.currentRect.y + this.currentRect.h / 2;
-         const minDim = Math.min(window.innerWidth, window.innerHeight);
-         const rectMin = Math.min(this.currentRect.w, this.currentRect.h);
-         this.targetZoomScale = (minDim / rectMin) * 0.4; // leave margin
+        square = { x: r.x, y: r.y + r.h - size, w: size, h: size };
+        nextRect = { x: r.x, y: r.y, w: r.w, h: r.h - size };
       }
     }
+
+    square.color = this.digitColor(digit);
+    square.digit = digit;
+    square.step = this.spiralStep;
+    square.arc = this.computeArcParams(square);
+
+    this.rects.push(square);
+    this.currentRect = nextRect;
+    this.spiralStep++;
+
+    this.updateCamera();
+    this.maybeRenormalize();
     ensureAnimationLoop();
   }
+
+  maybeRenormalize() {
+    const threshold = 8;
+    const peakZ = Math.max(this.zoomScale, this.targetZoomScale);
+    if (peakZ <= threshold) return;
+
+    const k = peakZ;
+    const tx = this.focusX, ty = this.focusY;
+
+    const remap = (o) => {
+      o.x = (o.x - tx) * k;
+      o.y = (o.y - ty) * k;
+      o.w *= k;
+      o.h *= k;
+    };
+    for (const r of this.rects) {
+      remap(r);
+      const a = r.arc;
+      if (a) {
+        a.cx = (a.cx - tx) * k; a.cy = (a.cy - ty) * k; a.r *= k;
+        a.p1x = (a.p1x - tx) * k; a.p1y = (a.p1y - ty) * k;
+        a.p2x = (a.p2x - tx) * k; a.p2y = (a.p2y - ty) * k;
+      }
+    }
+    remap(this.currentRect);
+    remap(this.outerRect);
+
+    this.targetFocusX = (this.targetFocusX - tx) * k;
+    this.targetFocusY = (this.targetFocusY - ty) * k;
+    this.focusX = 0;
+    this.focusY = 0;
+    this.zoomScale /= k;
+    this.targetZoomScale /= k;
+  }
+
+  updateCamera() {
+    const window_ = 6;
+    const recent = this.rects.slice(-window_);
+    const frame = recent.length ? [...recent, this.currentRect] : [this.outerRect];
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const r of frame) {
+      if (r.x < minX) minX = r.x;
+      if (r.y < minY) minY = r.y;
+      if (r.x + r.w > maxX) maxX = r.x + r.w;
+      if (r.y + r.h > maxY) maxY = r.y + r.h;
+    }
+    const span = Math.max(maxX - minX, maxY - minY);
+    const pad = span * 0.12;
+    minX -= pad; maxX += pad; minY -= pad; maxY += pad;
+    const w = maxX - minX, h = maxY - minY;
+    this.targetFocusX = (minX + maxX) / 2;
+    this.targetFocusY = (minY + maxY) / 2;
+    this.targetZoomScale = Math.min(window.innerWidth / w, window.innerHeight / h);
+  }
+
   update() {
     let active = false;
-    if (Math.abs(this.zoomScale - this.targetZoomScale) > 0.001) {
-      this.zoomScale += (this.targetZoomScale - this.zoomScale) * 0.05;
+    const zRate = 0.16, fRate = 0.16;
+    if (Math.abs(this.zoomScale - this.targetZoomScale) / Math.max(this.zoomScale, 1) > 0.002) {
+      this.zoomScale += (this.targetZoomScale - this.zoomScale) * zRate;
       active = true;
     }
-    if (Math.abs(this.focusX - this.targetFocusX) > 0.5) {
-      this.focusX += (this.targetFocusX - this.focusX) * 0.05;
+    const focusThresh = 0.3 / Math.max(this.zoomScale, 1);
+    if (Math.abs(this.focusX - this.targetFocusX) > focusThresh) {
+      this.focusX += (this.targetFocusX - this.focusX) * fRate;
       active = true;
     }
-    if (Math.abs(this.focusY - this.targetFocusY) > 0.5) {
-      this.focusY += (this.targetFocusY - this.focusY) * 0.05;
+    if (Math.abs(this.focusY - this.targetFocusY) > focusThresh) {
+      this.focusY += (this.targetFocusY - this.focusY) * fRate;
       active = true;
     }
-    // Always return active if moving so we don't freeze early
     if (!active && this.moving) this.moving = false;
     return active || this.moving;
   }
+
   draw(ctx) {
+    const zs = this.zoomScale;
+    const W = window.innerWidth, H = window.innerHeight;
+    const halfW = W / (2 * zs);
+    const halfH = H / (2 * zs);
+    const vL = this.focusX - halfW;
+    const vR = this.focusX + halfW;
+    const vT = this.focusY - halfH;
+    const vB = this.focusY + halfH;
+
     ctx.save();
-    ctx.translate(window.innerWidth / 2, window.innerHeight / 2);
-    
-    if (state.cameraFollow) {
-      ctx.scale(this.zoomScale, this.zoomScale);
-      ctx.translate(-this.focusX, -this.focusY);
+    ctx.translate(W / 2, H / 2);
+    ctx.scale(zs, zs);
+    ctx.translate(-this.focusX, -this.focusY);
+
+    const screenPx = 1 / Math.max(zs, 0.5);
+    const ink = '#2a1f14';
+    const inkSoft = 'rgba(42,31,20,0.42)';
+    const inkFaint = 'rgba(42,31,20,0.20)';
+    const inkGhost = 'rgba(42,31,20,0.10)';
+    const borderW = screenPx * 0.9;
+    const rects = this.rects;
+    const n = rects.length;
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    const oR = this.outerRect;
+    const outerContains = oR.x < vL && oR.x + oR.w > vR && oR.y < vT && oR.y + oR.h > vB;
+    const outerOff = oR.x + oR.w < vL || oR.x > vR || oR.y + oR.h < vT || oR.y > vB;
+    if (!outerContains && !outerOff) {
+      ctx.strokeStyle = ink;
+      ctx.lineWidth = borderW * 1.1;
+      ctx.strokeRect(oR.x, oR.y, oR.w, oR.h);
     }
-    
-    ctx.lineWidth = 6 * this.bs / this.zoomScale; // keep lines thick even when zoomed
-    ctx.strokeStyle = '#2c2c2c';
-    
-    this.rects.forEach(r => {
-      if (r.color) { 
-        ctx.fillStyle = r.color; 
-        ctx.fillRect(r.x, r.y, r.w, r.h); 
+
+    const maxScreenSpan = Math.max(W, H) * 4;
+    let firstVisible = n;
+    let endIdx = 0;
+    for (let i = 0; i < n; i++) {
+      const r = rects[i];
+      if (r.w * zs < 0.5) break;
+      if (r.w * zs > maxScreenSpan) continue;
+      if (r.x + r.w < vL || r.x > vR || r.y + r.h < vT || r.y > vB) continue;
+      if (firstVisible === n) firstVisible = i;
+      endIdx = i + 1;
+    }
+
+    ctx.globalAlpha = 0.62;
+    for (let i = 0; i < n; i++) {
+      const r = rects[i];
+      if (r.w * zs < 0.5) break;
+      if (!r.color) continue;
+      if (r.x + r.w < vL || r.x > vR || r.y + r.h < vT || r.y > vB) continue;
+      const cx = Math.max(r.x, vL);
+      const cy = Math.max(r.y, vT);
+      const cw = Math.min(r.x + r.w, vR) - cx;
+      const ch = Math.min(r.y + r.h, vB) - cy;
+      if (cw > 0 && ch > 0) {
+        ctx.fillStyle = r.color;
+        ctx.fillRect(cx, cy, cw, ch);
       }
-      ctx.strokeRect(r.x, r.y, r.w, r.h);
-    });
-    
-    // Draw current remaining rect outline faintly
-    ctx.strokeStyle = 'rgba(44,44,44,0.3)';
-    ctx.strokeRect(this.currentRect.x, this.currentRect.y, this.currentRect.w, this.currentRect.h);
-    
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.strokeStyle = inkGhost;
+    ctx.lineWidth = borderW * 0.45;
+    ctx.setLineDash([screenPx * 3, screenPx * 4]);
+    ctx.beginPath();
+    for (let i = firstVisible; i < endIdx; i++) {
+      const r = rects[i];
+      if (r.w * zs < 60) break;
+      if (r.x + r.w < vL || r.x > vR || r.y + r.h < vT || r.y > vB) continue;
+      const p = r.arc;
+      ctx.moveTo(p.cx + p.r, p.cy);
+      ctx.arc(p.cx, p.cy, p.r, 0, Math.PI * 2);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = inkFaint;
+    ctx.lineWidth = borderW * 0.4;
+    ctx.beginPath();
+    for (let i = firstVisible; i < endIdx; i++) {
+      const r = rects[i];
+      if (r.w * zs < 40) break;
+      if (r.x + r.w < vL || r.x > vR || r.y + r.h < vT || r.y > vB) continue;
+      const p = r.arc;
+      ctx.moveTo(p.cx, p.cy);
+      ctx.lineTo(p.p1x, p.p1y);
+      ctx.moveTo(p.cx, p.cy);
+      ctx.lineTo(p.p2x, p.p2y);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = inkSoft;
+    const dotR = screenPx * 1.2;
+    ctx.beginPath();
+    for (let i = firstVisible; i < endIdx; i++) {
+      const r = rects[i];
+      if (r.w * zs < 40) break;
+      if (r.x + r.w < vL || r.x > vR || r.y + r.h < vT || r.y > vB) continue;
+      const p = r.arc;
+      ctx.moveTo(p.cx + dotR, p.cy);
+      ctx.arc(p.cx, p.cy, dotR, 0, Math.PI * 2);
+    }
+    ctx.fill();
+
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = borderW * 0.95;
+    ctx.beginPath();
+    for (let i = firstVisible; i < endIdx; i++) {
+      const r = rects[i];
+      if (r.w * zs < 0.8) break;
+      if (r.x + r.w < vL || r.x > vR || r.y + r.h < vT || r.y > vB) continue;
+      ctx.rect(r.x, r.y, r.w, r.h);
+    }
+    ctx.stroke();
+
+    const j = screenPx * 0.5;
+    ctx.globalAlpha = 0.35;
+    ctx.lineWidth = borderW * 0.55;
+    ctx.beginPath();
+    for (let i = firstVisible; i < endIdx; i++) {
+      const r = rects[i];
+      if (r.w * zs < 0.8) break;
+      if (r.x + r.w < vL || r.x > vR || r.y + r.h < vT || r.y > vB) continue;
+      ctx.moveTo(r.x - j, r.y + j);
+      ctx.lineTo(r.x + r.w + j, r.y - j);
+      ctx.lineTo(r.x + r.w - j, r.y + r.h + j);
+      ctx.lineTo(r.x + j, r.y + r.h - j);
+      ctx.closePath();
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = borderW * 1.5;
+    ctx.beginPath();
+    for (let i = firstVisible; i < endIdx; i++) {
+      const r = rects[i];
+      if (r.w * zs < 0.6) break;
+      if (r.x + r.w < vL || r.x > vR || r.y + r.h < vT || r.y > vB) continue;
+      const p = r.arc;
+      ctx.moveTo(p.p1x, p.p1y);
+      ctx.arc(p.cx, p.cy, p.r, p.a1, p.a2, p.ccw);
+    }
+    ctx.stroke();
+
+    ctx.globalAlpha = 0.6;
+    ctx.lineWidth = borderW * 0.85;
+    for (let i = firstVisible; i < endIdx; i++) {
+      const r = rects[i];
+      if (r.w * zs < 0.6) break;
+      if (r.x + r.w < vL || r.x > vR || r.y + r.h < vT || r.y > vB) continue;
+      if (!r.color) continue;
+      const p = r.arc;
+      ctx.strokeStyle = r.color;
+      ctx.beginPath();
+      ctx.arc(p.cx, p.cy, p.r, p.a1, p.a2, p.ccw);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    const cR = this.currentRect;
+    if (cR.w * zs > 4 && !(cR.x + cR.w < vL || cR.x > vR || cR.y + cR.h < vT || cR.y > vB)) {
+      ctx.strokeStyle = inkSoft;
+      ctx.lineWidth = borderW * 0.55;
+      ctx.setLineDash([screenPx * 2.5, screenPx * 2.5]);
+      ctx.strokeRect(cR.x, cR.y, cR.w, cR.h);
+      ctx.setLineDash([]);
+    }
+
     ctx.restore();
+  }
+
+  computeArcParams(r) {
+    const step = r.step % 4;
+    let cx, cy, p1x, p1y, p2x, p2y;
+    if (step === 0) {
+      cx = r.x + r.w; cy = r.y + r.h;
+      p1x = r.x; p1y = r.y + r.h;
+      p2x = r.x + r.w; p2y = r.y;
+    } else if (step === 1) {
+      cx = r.x; cy = r.y + r.h;
+      p1x = r.x; p1y = r.y;
+      p2x = r.x + r.w; p2y = r.y + r.h;
+    } else if (step === 2) {
+      cx = r.x; cy = r.y;
+      p1x = r.x + r.w; p1y = r.y;
+      p2x = r.x; p2y = r.y + r.h;
+    } else {
+      cx = r.x + r.w; cy = r.y;
+      p1x = r.x + r.w; p1y = r.y + r.h;
+      p2x = r.x; p2y = r.y;
+    }
+    const a1 = Math.atan2(p1y - cy, p1x - cx);
+    const a2 = Math.atan2(p2y - cy, p2x - cx);
+    let diff = a2 - a1;
+    while (diff > Math.PI) diff -= 2 * Math.PI;
+    while (diff < -Math.PI) diff += 2 * Math.PI;
+    return { cx, cy, r: r.w, a1, a2, ccw: diff < 0, p1x, p1y, p2x, p2y };
   }
 }
