@@ -41,6 +41,27 @@ Pi Game is a fast-paced memorization gauntlet. Tap digits of Pi on a number pad 
 - **Works offline** — no internet needed after first load
 - **Resume mid-game** — close the tab, come back later, pick up right where you left off
 
+## Development
+
+Pi Game runs on the **Arcade SDK** — the shared launcher framework hosted at [paulgibeault.github.io](https://paulgibeault.github.io). Game state, settings (audio volume, reduced motion), and the leaderboard all flow through `Arcade.state`, `Arcade.settings`, and `Arcade.scores('classic')` instead of touching `localStorage` directly. A one-time migration moves legacy saves into the SDK on first load. In production both the launcher and the game live at the same origin so the SDK's `postMessage` / `allow-same-origin` iframe contract works out of the box.
+
+The repo ships two dev scripts for the two ways you'll want to run it:
+
+### `./go.sh` — game in isolation
+
+Serves just `pi-game` on `http://localhost:8790`. Mirrors `arcade-sdk.js` from a sibling clone of `paulgibeault/paulgibeault.github.io` so `/arcade-sdk.js` resolves the same way it does in production. Use this when you're iterating on the game itself.
+
+### `./ago` — game inside the launcher
+
+Stages the launcher and `pi-game/` into a single same-origin tree under `.arcade-stage/` and serves it on `http://127.0.0.1:4792`. URLs are rewritten to the local origin and service workers are defanged on both sides so edits aren't masked by SW caching. Use this when you're testing how the game behaves *inside* the Arcade launcher (suspend/resume, score sync, settings propagation).
+
+```sh
+./ago          # build, stage, serve, open browser
+./ago stop     # kill the running server
+```
+
+Set `ARCADE_LAUNCHER_DIR` if your launcher checkout isn't the default sibling path, or `ARCADE_PORT` to change the port.
+
 <div align="center">
 
 ---

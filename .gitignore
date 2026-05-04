@@ -1,2 +1,4 @@
 .go.log
-.go.log
+.go.pid
+arcade-sdk.js
+.arcade-stage/
