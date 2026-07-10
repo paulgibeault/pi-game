@@ -954,26 +954,13 @@ function drawAppIcon(size) {
 }
 
 function generateAppIcons() {
-  // apple-touch-icon (180px)
+  // apple-touch-icon (180px) — iOS ignores manifest.json icons, so this stays
+  // a dynamically drawn data URI. The manifest itself is left alone (static
+  // manifest.json already ships a real icon.svg); no blob: URL swap.
   const link180 = document.createElement('link');
   link180.rel = 'apple-touch-icon'; link180.sizes = '180x180';
   link180.href = drawAppIcon(180);
   document.head.appendChild(link180);
-  // Generate dynamic manifest with embedded icon data URIs
-  const icon192 = drawAppIcon(192), icon512 = drawAppIcon(512);
-  const manifest = {
-    name: 'Pi Game', short_name: 'Pi Game',
-    description: 'How many digits of Pi can you recite?',
-    start_url: './', scope: './', display: 'standalone',
-    background_color: '#0a0a0f', theme_color: '#0a0a0f', orientation: 'portrait',
-    icons: [
-      { src: icon192, sizes: '192x192', type: 'image/png' },
-      { src: icon512, sizes: '512x512', type: 'image/png' }
-    ]
-  };
-  const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-  const manifestLink = document.querySelector('link[rel="manifest"]');
-  if (manifestLink) manifestLink.href = URL.createObjectURL(blob);
 }
 
 // ===== Pi Digits =====
