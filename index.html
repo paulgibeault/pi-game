@@ -373,7 +373,7 @@ body {
 .pi-digit { display: inline-block; animation: digit-pop 0.25s ease-out; }
 .pi-digit.latest { color: var(--success-color); text-shadow: 0 0 10px var(--success-color); }
 [data-theme="orbital"] .pi-digit {
-  animation: digit-pop 0.25s ease-out, orbital-float 3s ease-in-out infinite;
+  animation: digit-pop 0.25s ease-out, orbital-float calc(3s * var(--motion-scale, 1)) ease-in-out infinite;
   animation-delay: 0s, calc(var(--digit-index, 0) * 0.1s);
 }
 
@@ -400,7 +400,7 @@ body {
 .numpad-btn.correct-flash { border-color: var(--success-color) !important; box-shadow: 0 0 20px rgba(0, 255, 136, 0.4) !important; }
 .numpad-btn.wrong-flash { border-color: var(--error-color) !important; box-shadow: 0 0 20px rgba(255, 51, 102, 0.5) !important; background: rgba(255, 51, 102, 0.2) !important; }
 .numpad-btn.zero-btn { grid-column: 2; }
-.numpad.combo-active .numpad-btn { animation: pulse-glow 0.8s ease-in-out infinite; }
+.numpad.combo-active .numpad-btn { animation: pulse-glow calc(0.8s * var(--motion-scale, 1)) ease-in-out infinite; }
 
 /* ===== Theme-Specific Overrides ===== */
 
@@ -432,13 +432,13 @@ body {
     transparent 100%
   );
   background-size: 100% 30%;
-  animation: neural-scanline 8s linear infinite;
+  animation: neural-scanline calc(8s * var(--motion-scale, 1)) linear infinite;
 }
 /* Orbital: subtle pulsing nebula */
 [data-theme="orbital"] .theme-overlay {
   opacity: 1;
   background: radial-gradient(ellipse at 30% 40%, rgba(124,92,252,0.06), transparent 50%);
-  animation: orbital-twinkle 6s ease-in-out infinite;
+  animation: orbital-twinkle calc(6s * var(--motion-scale, 1)) ease-in-out infinite;
 }
 
 /* ===== Theme Button Previews ===== */

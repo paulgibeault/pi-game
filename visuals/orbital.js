@@ -83,41 +83,52 @@ class OrbitalVisual {
   }
 
   update() {
-    this.time++;
+    // Reduced motion: still place every body (so newly fed digits render),
+    // but freeze orbits, trails and camera drift instead of advancing them.
+    const reduced = Arcade.settings.reducedMotion();
+    if (!reduced) this.time++;
     let active = false;
     let newest = null;
 
     for (const b of this.bodies) {
       if (b.type === 'flare') {
-        if (b.age < 150) { b.age++; active = true; }
+        if (!reduced && b.age < 150) { b.age++; active = true; }
       } else if (b.type === 'comet') {
-        b.angle += b.speed;
+        if (!reduced) b.angle += b.speed;
         const r = b.a * (1 - b.e * b.e) / (1 + b.e * Math.cos(b.angle));
         const lx = Math.cos(b.angle) * r;
         const ly = Math.sin(b.angle) * r;
         const c = Math.cos(b.axisRotation), s = Math.sin(b.axisRotation);
         b.x = lx * c - ly * s;
         b.y = lx * s + ly * c;
-        b.trail.push({ x: b.x, y: b.y });
-        if (b.trail.length > 60) b.trail.shift();
-        active = true;
+        if (!reduced) {
+          b.trail.push({ x: b.x, y: b.y });
+          if (b.trail.length > 60) b.trail.shift();
+          active = true;
+        }
         newest = { x: b.x, y: b.y };
       } else {
-        b.angle += b.speed;
+        if (!reduced) b.angle += b.speed;
         b.x = Math.cos(b.angle) * b.distance;
         b.y = Math.sin(b.angle) * b.distance;
-        b.trail.push({ x: b.x, y: b.y });
-        if (b.trail.length > b.maxTrail) b.trail.shift();
-        active = true;
+        if (!reduced) {
+          b.trail.push({ x: b.x, y: b.y });
+          if (b.trail.length > b.maxTrail) b.trail.shift();
+          active = true;
+        }
         newest = { x: b.x, y: b.y };
       }
     }
 
     const target = (state.cameraFollow && newest) ? newest : { x: 0, y: 0 };
-    this.focusX += (target.x - this.focusX) * 0.04;
-    this.focusY += (target.y - this.focusY) * 0.04;
+    if (reduced) {
+      this.focusX = target.x; this.focusY = target.y;
+    } else {
+      this.focusX += (target.x - this.focusX) * 0.04;
+      this.focusY += (target.y - this.focusY) * 0.04;
+    }
 
-    if (this.bodies.length > 0) active = true;
+    if (this.bodies.length > 0 && !reduced) active = true;
     return active;
   }
 

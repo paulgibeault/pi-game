@@ -41,7 +41,8 @@ class SpirographVisual {
   }
 
   update() {
-    this.time++;
+    const reduced = Arcade.settings.reducedMotion();
+    if (!reduced) this.time++;
 
     // Camera zoom shrinks as tiles spread further. Tiles themselves stay fixed size on screen.
     let maxR = this.SHAPE_R;
@@ -51,6 +52,15 @@ class SpirographVisual {
     const buffer = this.SHAPE_R * 1.05;
     const fit = (this.viewMin / 2 - buffer) / maxR;
     this.targetScale = Math.max(0.04, Math.min(this.MAX_SCALE, fit));
+
+    if (reduced) {
+      // Snap zoom and every tile straight to their resting state instead of
+      // continuously lerping/unrolling.
+      this.scale = this.targetScale;
+      for (const e of this.elements) { e.drawProgress = 1; e.pulse = 0; }
+      return false;
+    }
+
     this.scale += (this.targetScale - this.scale) * 0.06;
 
     let active = false;

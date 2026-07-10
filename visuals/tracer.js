@@ -52,6 +52,12 @@ class TracerVisual {
     ensureAnimationLoop();
   }
   update() {
+    if (Arcade.settings.reducedMotion()) {
+      // Snap straight to the resting position instead of continuously lerping.
+      this.x = this.targetX; this.y = this.targetY;
+      this.moving = false;
+      return false;
+    }
     let active = false;
     const dx = this.targetX - this.x, dy = this.targetY - this.y;
     if (Math.abs(dx) > window.innerWidth / 2 || Math.abs(dy) > window.innerHeight / 2) {

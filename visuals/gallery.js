@@ -145,6 +145,14 @@ class GalleryVisual {
   }
 
   update() {
+    if (Arcade.settings.reducedMotion()) {
+      // Snap the camera straight to its target instead of continuously panning/zooming.
+      this.zoomScale = this.targetZoomScale;
+      this.focusX = this.targetFocusX;
+      this.focusY = this.targetFocusY;
+      this.moving = false;
+      return false;
+    }
     let active = false;
     const zRate = 0.16, fRate = 0.16;
     if (Math.abs(this.zoomScale - this.targetZoomScale) / Math.max(this.zoomScale, 1) > 0.002) {
