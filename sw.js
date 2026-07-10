@@ -1,12 +1,17 @@
 // Pi Game — Service Worker
 // Caches all assets for offline play after first load.
 
-const CACHE_NAME = 'pi-game-v2';
+const CACHE_NAME = 'pi-game-v3';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './icon.svg',
+  './visuals/tracer.js?v=2',
+  './visuals/spirograph.js?v=2',
+  './visuals/gallery.js?v=4',
+  './visuals/orbital.js?v=2',
+  './visuals/manager.js?v=2',
 ];
 
 self.addEventListener('install', event => {
@@ -39,8 +44,18 @@ self.addEventListener('fetch', event => {
     );
     return;
   }
-  // Cache-first for static assets
+  // Cache-first for static assets; cache successful fetches too, so assets
+  // missing from ASSETS (or added later) still work offline next time.
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
+    caches.match(event.request).then(cached => {
+      if (cached) return cached;
+      return fetch(event.request).then(response => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
+        }
+        return response;
+      });
+    })
   );
 });
