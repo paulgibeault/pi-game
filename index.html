@@ -970,11 +970,18 @@ const PI_DIGITS = '1415926535897932384626433832795028841971693993751058209749445
 // Leaderboard lives in Arcade.scores('classic'), not in this blob, so it
 // rides the launcher's save/load bundling and inherits the player name.
 const DEFAULT_STATE = {
-  gameState: 'MENU', currentTheme: 'neural', piSequence: PI_DIGITS,
-  userSequence: '', startTime: null, soundEnabled: true, cameraFollow: false
+  gameState: 'MENU', currentTheme: 'neural',
+  userSequence: '', soundEnabled: true, cameraFollow: false
 };
 let state = { ...DEFAULT_STATE };
 let timerInterval = null, lastPressTime = 0, comboLevel = 0, lastGameScore = 0;
+// Elapsed run time lives in its own persisted key via the session timer, not
+// in the state blob — it self-pauses across suspend/hidden time and re-syncs
+// on launcher-driven state imports, unlike a hand-rolled Date.now() epoch.
+// Registered here (module scope, before Arcade.onSuspend/onResume/onStateReplaced
+// below) so its internal lifecycle listeners run first and stay in sync.
+const sessionTimer = Arcade.session.start({ persistKey: 'elapsedMs' });
+sessionTimer.pause();
 
 // ===== Audio =====
 let audioCtx = null;
@@ -1115,7 +1122,6 @@ function triggerErrorParticles(el) {
 function saveState() { Arcade.state.set('state', state); }
 function loadState() {
   state = Arcade.state.getOrInit('state', DEFAULT_STATE);
-  state.piSequence = PI_DIGITS;
 }
 
 // One-shot migration of legacy localStorage keys into the namespaced layout.
@@ -1230,7 +1236,7 @@ $themeButtons.forEach(b => b.addEventListener('click', () => applyTheme(b.datase
 function startTimer() {
   stopTimer();
   timerInterval = setInterval(() => {
-    if (state.startTime) $timerDisplay.textContent = ((Date.now() - state.startTime) / 1000).toFixed(1) + 's';
+    $timerDisplay.textContent = (sessionTimer.elapsedMs() / 1000).toFixed(1) + 's';
   }, 100);
 }
 function stopTimer() { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } }
@@ -1248,16 +1254,17 @@ function renderPiDigits() {
 
 // ===== Game Logic =====
 function startGame() {
-  state.gameState = 'PLAYING'; state.userSequence = ''; state.startTime = null;
+  state.gameState = 'PLAYING'; state.userSequence = '';
   comboLevel = 0; lastPressTime = 0; saveState(); renderPiDigits();
+  sessionTimer.pause(); sessionTimer.reset();
   $timerDisplay.textContent = '0.0s'; showScreen('game-screen');
   if (typeof currentVisual !== 'undefined' && currentVisual) currentVisual.reset();
 }
 
 function handleDigitPress(digit, btn) {
   if (state.gameState !== 'PLAYING') return;
-  const idx = state.userSequence.length, expected = state.piSequence[idx];
-  if (!state.startTime) { state.startTime = Date.now(); startTimer(); }
+  const idx = state.userSequence.length, expected = PI_DIGITS[idx];
+  if (idx === 0) { sessionTimer.reset(); sessionTimer.resume(); startTimer(); }
   const now = Date.now();
   if (lastPressTime && (now - lastPressTime) < 400) comboLevel++; else comboLevel = Math.max(0, comboLevel - 1);
   lastPressTime = now;
@@ -1275,9 +1282,9 @@ function handleDigitPress(digit, btn) {
 }
 
 function gameOver(btn) {
-  state.gameState = 'GAME_OVER'; stopTimer();
+  state.gameState = 'GAME_OVER'; stopTimer(); sessionTimer.pause();
   const score = state.userSequence.length; lastGameScore = score;
-  const timeMs = state.startTime ? Date.now() - state.startTime : 0;
+  const timeMs = sessionTimer.elapsedMs();
   const timeSec = (timeMs / 1000).toFixed(1);
   playWrongSound();
   if (!Arcade.settings.reducedMotion()) {
@@ -1290,7 +1297,7 @@ function gameOver(btn) {
       meta: { time: parseFloat(timeSec), date: new Date().toLocaleDateString() }
     });
   }
-  state.userSequence = ''; state.startTime = null; saveState();
+  state.userSequence = ''; saveState();
   setTimeout(() => {
     $finalScore.textContent = score; $finalTime.textContent = timeSec;
     renderLeaderboard($gameoverLbList); renderAutopsy(score); showScreen('gameover-screen');
@@ -1501,7 +1508,8 @@ Arcade.onSuspend(() => {
 });
 Arcade.onResume(() => {
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-  if (state.gameState === 'PLAYING' && state.startTime) startTimer();
+  if (state.gameState === 'PLAYING' && state.userSequence.length > 0) startTimer();
+  ensureAnimationLoop();
 });
 
 // Launcher imported a save while we were running — re-hydrate from disk.
@@ -1511,10 +1519,9 @@ Arcade.onStateReplaced(() => {
   updateSoundBtn();
   if (state.gameState === 'PLAYING' && state.userSequence.length > 0) {
     renderPiDigits();
-    if (state.startTime) {
-      $timerDisplay.textContent = ((Date.now() - state.startTime) / 1000).toFixed(1) + 's';
-      startTimer();
-    }
+    sessionTimer.resume();
+    $timerDisplay.textContent = (sessionTimer.elapsedMs() / 1000).toFixed(1) + 's';
+    startTimer();
     showScreen('game-screen');
   } else {
     if (state.gameState === 'GAME_OVER') { state.gameState = 'MENU'; saveState(); }
@@ -1531,7 +1538,9 @@ function init() {
   placeBrandLogos(); generateAppIcons();
   if (state.gameState === 'PLAYING' && state.userSequence.length > 0) {
     renderPiDigits();
-    if (state.startTime) { $timerDisplay.textContent = ((Date.now()-state.startTime)/1000).toFixed(1)+'s'; startTimer(); }
+    sessionTimer.resume();
+    $timerDisplay.textContent = (sessionTimer.elapsedMs() / 1000).toFixed(1) + 's';
+    startTimer();
     showScreen('game-screen');
   } else { if (state.gameState === 'GAME_OVER') { state.gameState = 'MENU'; saveState(); } showScreen('start-screen'); }
 }
