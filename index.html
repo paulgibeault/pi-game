@@ -1141,11 +1141,15 @@ function migrateLegacyState() {
     const legacyKeys = ['piGameState', 'arcade.v1.pi-game.ls.piGameState'];
     let parsed = null;
     for (const k of legacyKeys) {
-      const raw = localStorage.getItem(k);
+      // Guarded: in a launcher-sandboxed (opaque-origin) frame, touching
+      // localStorage throws SecurityError. Legacy pre-SDK keys are
+      // unreachable there by design — treat as nothing to migrate.
+      let raw = null;
+      try { raw = localStorage.getItem(k); } catch (e) {}
       if (raw) {
         try { parsed = JSON.parse(raw); } catch (e) {}
       }
-      localStorage.removeItem(k);
+      try { localStorage.removeItem(k); } catch (e) {}
     }
     // Also salvage from any state already written under the new key (e.g. a
     // previous SDK build that hadn't yet split out scores).
