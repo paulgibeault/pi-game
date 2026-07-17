@@ -6,13 +6,15 @@ PID_FILE="$DIR/.go.pid"
 LOG_FILE="$DIR/.go.log"
 PORT=8790
 
-# Mirror the Arcade SDK from the sibling launcher repo so /arcade-sdk.js
-# resolves when serving pi-game in isolation. In production both live at the
-# same origin (paulgibeault.github.io); this preserves that invariant locally.
+# Symlink (never copy) the Arcade SDK from the sibling launcher repo so
+# /arcade-sdk.js resolves when serving pi-game in isolation — a link can't go
+# stale, and cp onto an existing symlink-to-source errors out under set -e.
+# In production both live at the same origin (paulgibeault.github.io); this
+# preserves that invariant locally.
 SDK_SRC="$DIR/../paulgibeault.github.io/arcade-sdk.js"
 SDK_DST="$DIR/arcade-sdk.js"
 if [ -f "$SDK_SRC" ]; then
-  cp "$SDK_SRC" "$SDK_DST"
+  ln -sfn "$SDK_SRC" "$SDK_DST"
 else
   echo "WARNING: $SDK_SRC not found — pi-game will fail to load Arcade SDK." >&2
   echo "         Clone paulgibeault/paulgibeault.github.io as a sibling directory." >&2
