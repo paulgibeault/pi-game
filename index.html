@@ -984,69 +984,43 @@ const sessionTimer = Arcade.session.start({ persistKey: 'elapsedMs' });
 sessionTimer.pause();
 
 // ===== Audio =====
-let audioCtx = null;
-function getAudioCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  return audioCtx;
+// SFX are managed by Arcade.audio (SDK 3.5.0). The SDK owns the AudioContext,
+// first-gesture unlock, master gain wired to the launcher audioVolume (incl.
+// the global mute button), and suspend-on-hide / resume-on-return — so none of
+// that lives here anymore. This game keeps only its own in-game mute toggle
+// (state.soundEnabled) as an extra gate; volume itself is launcher-owned.
+// Cue specs port the previous oscillator parameters (type/freq/dur/gain)
+// verbatim so each sound is recognisably the same; the SDK applies its own
+// safe linear-ramp envelope in place of the old exponentialRamp-to-0.001.
+if (window.Arcade && Arcade.audio) {
+  Arcade.audio
+    // Correct digit: sine, base 440 Hz. freq rises with digit index per play
+    // (Math.min(440 + idx*8, 1200)); see playCorrect() below.
+    .cue('correct', { type: 'sine', freq: 440, dur: 0.12, gain: 0.15 })
+    // Combo sparkle layered over 'correct' when the streak is hot (comboLevel
+    // > 3): triangle a fifth up, gain scaled per play by Math.min(combo, 10).
+    .cue('combo', { type: 'triangle', freq: 660, dur: 0.15, gain: 0.05 })
+    // Wrong digit / game over: three detuned sawtooth voices as a chord.
+    .cue('wrong', [
+      { type: 'sawtooth', freq: 150, dur: 0.5, gain: 0.12, delay: 0 },
+      { type: 'sawtooth', freq: 157, dur: 0.5, gain: 0.12, delay: 0 },
+      { type: 'sawtooth', freq: 185, dur: 0.5, gain: 0.12, delay: 0 },
+    ])
+    // Practice mode feedback (softer/shorter than the main game cues).
+    .cue('practice-correct', { type: 'sine', freq: 600, dur: 0.08, gain: 0.08 })
+    .cue('practice-wrong', { type: 'square', freq: 200, dur: 0.2, gain: 0.1 });
 }
-// Multiplier honoring the launcher's audioVolume setting (0..1).
-// Returning <= 0 from the per-function gate skips synth entirely so we never
-// hand a zero start value to exponentialRampToValueAtTime.
-function audioGate() {
-  if (!state.soundEnabled) return 0;
-  const v = Arcade.settings.audioVolume();
-  return v > 0 ? v : 0;
-}
-function playCorrectSound(digitIndex) {
-  const v = audioGate(); if (v <= 0) return;
-  try {
-    const ctx = getAudioCtx(), osc = ctx.createOscillator(), gain = ctx.createGain();
-    const freq = Math.min(440 + digitIndex * 8, 1200);
-    osc.frequency.setValueAtTime(freq, ctx.currentTime); osc.type = 'sine';
-    if (comboLevel > 3) {
-      const o2 = ctx.createOscillator(), g2 = ctx.createGain();
-      o2.frequency.setValueAtTime(freq * 1.5, ctx.currentTime); o2.type = 'triangle';
-      g2.gain.setValueAtTime(0.05 * Math.min(comboLevel, 10) * v, ctx.currentTime);
-      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-      o2.connect(g2).connect(ctx.destination); o2.start(); o2.stop(ctx.currentTime + 0.15);
-    }
-    gain.gain.setValueAtTime(0.15 * v, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-    osc.connect(gain).connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.12);
-  } catch (e) {}
-}
-function playWrongSound() {
-  const v = audioGate(); if (v <= 0) return;
-  try {
-    const ctx = getAudioCtx();
-    [150, 157, 185].forEach(f => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.frequency.setValueAtTime(f, ctx.currentTime); o.type = 'sawtooth';
-      g.gain.setValueAtTime(0.12 * v, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-      o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.5);
-    });
-  } catch (e) {}
-}
-function playPracticeCorrect() {
-  const v = audioGate(); if (v <= 0) return;
-  try {
-    const ctx = getAudioCtx(), o = ctx.createOscillator(), g = ctx.createGain();
-    o.frequency.setValueAtTime(600, ctx.currentTime); o.type = 'sine';
-    g.gain.setValueAtTime(0.08 * v, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
-    o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.08);
-  } catch (e) {}
-}
-function playPracticeWrong() {
-  const v = audioGate(); if (v <= 0) return;
-  try {
-    const ctx = getAudioCtx(), o = ctx.createOscillator(), g = ctx.createGain();
-    o.frequency.setValueAtTime(200, ctx.currentTime); o.type = 'square';
-    g.gain.setValueAtTime(0.1 * v, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-    o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.2);
-  } catch (e) {}
+// A2 wrapper — the single guarded play-site. Feature-detects Arcade.audio and
+// gates on the in-game mute toggle (state.soundEnabled).
+const sfx = (name, opts) => {
+  if (window.Arcade && Arcade.audio && state.soundEnabled) Arcade.audio.play(name, opts);
+};
+// Correct-digit cue with the rising pitch + hot-streak sparkle ported as
+// per-play overrides.
+function playCorrect(digitIndex) {
+  const freq = Math.min(440 + digitIndex * 8, 1200);
+  sfx('correct', { freq });
+  if (comboLevel > 3) sfx('combo', { freq: freq * 1.5, gain: 0.05 * Math.min(comboLevel, 10) });
 }
 
 // ===== Particles =====
@@ -1275,7 +1249,7 @@ function handleDigitPress(digit, btn) {
   $numpad.classList.toggle('combo-active', comboLevel > 5);
 
   if (digit === expected) {
-    state.userSequence += digit; saveState(); renderPiDigits(); playCorrectSound(idx);
+    state.userSequence += digit; saveState(); renderPiDigits(); playCorrect(idx);
     btn.classList.add('correct-flash'); setTimeout(() => btn.classList.remove('correct-flash'), 200);
     if (!Arcade.settings.reducedMotion()) {
       document.body.classList.add('shake-correct'); setTimeout(() => document.body.classList.remove('shake-correct'), 150);
@@ -1290,7 +1264,7 @@ function gameOver(btn) {
   const score = state.userSequence.length; lastGameScore = score;
   const timeMs = sessionTimer.elapsedMs();
   const timeSec = (timeMs / 1000).toFixed(1);
-  playWrongSound();
+  sfx('wrong');
   if (!Arcade.settings.reducedMotion()) {
     document.body.classList.add('shake-wrong'); setTimeout(() => document.body.classList.remove('shake-wrong'), 400);
   }
@@ -1300,6 +1274,17 @@ function gameOver(btn) {
       score,
       meta: { time: parseFloat(timeSec), date: new Date().toLocaleDateString() }
     });
+    // Records: single best-ever streak alongside the 'classic' leaderboard.
+    if (Arcade.records) {
+      const prior = Arcade.records.get('best_streak');
+      const { improved } = Arcade.records.best('best_streak', {
+        value: score, direction: 'higher', format: 'integer', label: 'Best streak',
+      });
+      // Flourish only on a genuine beat (not the very first record).
+      if (improved && prior && Arcade.ui && Arcade.ui.toast) {
+        Arcade.ui.toast('New best streak: ' + score + ' digits!', { kind: 'success' });
+      }
+    }
   }
   state.userSequence = ''; saveState();
   setTimeout(() => {
@@ -1419,7 +1404,7 @@ function handlePracticePress(digit, btn) {
 
   if (digit === expected) {
     practicePos++;
-    playPracticeCorrect();
+    sfx('practice-correct');
     btn.classList.add('correct-flash'); setTimeout(() => btn.classList.remove('correct-flash'), 150);
     if (typeof currentVisual !== 'undefined' && currentVisual) currentVisual.feedDigit(digit, practiceRangeStart + practicePos);
     renderPractice();
@@ -1427,7 +1412,7 @@ function handlePracticePress(digit, btn) {
       $practiceProgress.textContent = 'Complete!';
     }
   } else {
-    playPracticeWrong();
+    sfx('practice-wrong');
     btn.classList.add('wrong-flash'); setTimeout(() => btn.classList.remove('wrong-flash'), 300);
     // Flash the current digit red briefly
     const cur = $practiceDigits.querySelector('.current');
@@ -1507,11 +1492,9 @@ $retryBtn.addEventListener('click', () => { state.gameState = 'MENU'; saveState(
 // ===== Lifecycle (launcher iframe pool) =====
 Arcade.onSuspend(() => {
   stopTimer();
-  if (audioCtx && audioCtx.state === 'running') audioCtx.suspend();
   if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
 });
 Arcade.onResume(() => {
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
   if (state.gameState === 'PLAYING' && state.userSequence.length > 0) startTimer();
   ensureAnimationLoop();
 });
@@ -1539,6 +1522,18 @@ Arcade.onStateReplaced(() => {
 function init() {
   migrateLegacyState();
   loadState(); applyTheme(state.currentTheme); updateSoundBtn(); buildRangeButtons();
+  // One-shot: seed the Best streak record from the top of the existing
+  // 'classic' leaderboard so long-time players keep their history.
+  if (Arcade.records && Arcade.state && Arcade.state.migrate) {
+    Arcade.state.migrate('records-v1', () => {
+      const top = Arcade.scores.list('classic', { limit: 1 })[0];
+      if (top && Number.isFinite(top.score)) {
+        Arcade.records.best('best_streak', {
+          value: top.score, direction: 'higher', format: 'integer', label: 'Best streak',
+        });
+      }
+    });
+  }
   placeBrandLogos(); generateAppIcons();
   if (state.gameState === 'PLAYING' && state.userSequence.length > 0) {
     renderPiDigits();
