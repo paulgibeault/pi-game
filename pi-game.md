@@ -42,7 +42,7 @@ The user must be able to select from 4 distinct themes on the start screen. Impl
 The core loop is simple, so the feedback must be highly engaging. Implement the following dynamically via JavaScript/CSS based on the active theme:
 
 * **Visuals:** Add subtle CSS keyframe screen shakes on correct presses, and a violent screen shake on failure. Add particle bursts or CSS transition flares on the number pad when a key is pressed.
-* **Audio (Web Audio API):** Generate procedural UI sounds.
+* **Audio:** Procedural UI sounds via the launcher's managed `Arcade.audio` SFX engine (SDK 3.5.0+) — not hand-rolled Web Audio API code in-game; see `index.html`'s `Arcade.audio.cue(...)` registrations.
 * Correct press: A synthesized tone that slightly increases in pitch (`frequency`) with every consecutive correct digit.
 * Wrong press: A harsh, dissonant chord or low-frequency drop.
 
