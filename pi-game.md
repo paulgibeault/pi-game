@@ -42,9 +42,10 @@ The user must be able to select from 4 distinct themes on the start screen. Impl
 The core loop is simple, so the feedback must be highly engaging. Implement the following dynamically via JavaScript/CSS based on the active theme:
 
 * **Visuals:** Add subtle CSS keyframe screen shakes on correct presses, and a violent screen shake on failure. Add particle bursts or CSS transition flares on the number pad when a key is pressed.
-* **Audio:** Procedural UI sounds via the launcher's managed `Arcade.audio` SFX engine (SDK 3.5.0+) — not hand-rolled Web Audio API code in-game; see `index.html`'s `Arcade.audio.cue(...)` registrations.
-* Correct press: A synthesized tone that slightly increases in pitch (`frequency`) with every consecutive correct digit.
-* Wrong press: A harsh, dissonant chord or low-frequency drop.
+* **Audio:** Procedural sound via the launcher's managed `Arcade.audio` — not hand-rolled Web Audio API code in-game. Registration lives in `js/audio.js`; the design lives in `js/soundpack.js` and is approved by ear from a rendered audition before it ships.
+* Correct press: A footfall in a long stone corridor. What grows across a run is the ROOM — reflections behind the step, driven by how deep into Pi you are — not the pitch and not the level.
+* Wrong press: The step lands on nothing. The floor gives, the step swells into empty air, the corridor answers at once, and the run is over.
+* *(Superseded: the original brief asked for a tone rising in pitch per digit and a dissonant chord on failure. That is the chiptune profile, frozen in `audio/chiptune-archive.mjs`, and it is still what a player on a stale service-worker cache hears.)*
 
 
 * **Combo Modifiers:** If the time between keypresses is very short, intensify the visual glow or particles to reward speed and muscle memory.

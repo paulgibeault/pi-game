@@ -3,6 +3,15 @@
 <head>
 <script src="/arcade-sdk.js"></script>
 <script>Arcade.init({ gameId: 'pi-game' });</script>
+<!-- Sound. The element library is the SDK's optional audio companion, taken
+     from the EVERGREEN path to match the evergreen /arcade-sdk.js above — the
+     two have to move majors together, and the rest of the fleet pins both to
+     /sdk/v3/ instead. Off the launcher origin this simply 404s and js/audio.js
+     falls back to the archived chiptune profile, which is why it loads before
+     the pack rather than being required by it. -->
+<script src="/arcade-audio.js"></script>
+<script src="js/soundpack.js"></script>
+<script src="js/audio.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Pi Game</title>
@@ -984,72 +993,25 @@ const sessionTimer = Arcade.session.start({ persistKey: 'elapsedMs' });
 sessionTimer.pause();
 
 // ===== Audio =====
-// SFX are managed by Arcade.audio (SDK 3.5.0). The SDK owns the AudioContext,
-// first-gesture unlock, master gain wired to the launcher audioVolume (incl.
-// the global mute button), and suspend-on-hide / resume-on-return — so none of
-// that lives here anymore. This game keeps only its own in-game mute toggle
-// (state.soundEnabled) as an extra gate; volume itself is launcher-owned.
+// SFX are managed by Arcade.audio. The SDK owns the AudioContext, first-gesture
+// unlock, master gain wired to the launcher audioVolume (incl. the global mute
+// button), and suspend-on-hide / resume-on-return — so none of that lives here.
+// This game keeps only its own on-screen sound toggle (state.soundEnabled) as
+// an extra gate on top; volume itself is launcher-owned.
 //
-// Sound identity: a recital under pressure. 'correct' is a metronome tick that
-// keeps time *under* the player's concentration, never a reward chime; 'wrong'
-// is an alarm strike that ends the run. Everything else is a sibling of one of
-// those two. The game asks for hundreds of keystrokes in a row, so the tick's
-// first duty is to stay out of the way — unobtrusive beats interesting.
-if (window.Arcade && Arcade.audio) {
-  Arcade.audio
-    // Correct digit — the metronome tick. Triangle (a touch more edge than a
-    // sine, so it reads as a click rather than a beep), near-instant attack and
-    // a 70 ms fall to silence: percussive, and short enough that fast typing
-    // never smears one tick into the next. Stays a SINGLE-object spec because
-    // playCorrect() overrides `freq` per play for the rising digit-index ladder
-    // (Math.min(440 + idx*8, 1200)) and the SDK only merges overrides onto
-    // single-object cues — an array would silently drop the ladder. For the
-    // same reason there is no `toFreq` bend: a fixed target would mean a
-    // different-sized bend at every rung of the ladder.
-    .cue('correct', { type: 'triangle', freq: 440, dur: 0.07, gain: 0.14, attack: 0.001, release: 0.065 })
-    // Hot-streak accent layered over 'correct' (comboLevel > 3): a clean sine
-    // ping a fifth above the tick, decaying the whole way out. Also single-
-    // object — playCorrect() overrides both `freq` and `gain` per play, so it
-    // scales with the streak. It is an accent on the tick, not a second cue:
-    // it must stay quieter than the tick it rides on at every streak level.
-    .cue('combo', { type: 'sine', freq: 660, dur: 0.09, gain: 0.05, attack: 0.001, release: 0.085 })
-    // Wrong digit / game over — the alarm strike. A noise transient and a
-    // pitch-dropping triangle land together as the hit; 20 ms later the detuned
-    // sawtooth cluster sags in and holds, all three voices bending downward so
-    // the run audibly dies instead of resolving into an organ chord. The only
-    // long cue in the game, and it fires exactly once per run.
-    .cue('wrong', [
-      { type: 'noise', dur: 0.045, gain: 0.10, attack: 0.001, release: 0.044, delay: 0 },
-      { type: 'triangle', freq: 200, toFreq: 55, dur: 0.18, gain: 0.16, attack: 0.001, release: 0.16, delay: 0 },
-      { type: 'sawtooth', freq: 150, toFreq: 138, dur: 0.5, gain: 0.08, attack: 0.006, release: 0.34, delay: 0.02 },
-      { type: 'sawtooth', freq: 157, toFreq: 144, dur: 0.5, gain: 0.08, attack: 0.006, release: 0.34, delay: 0 },
-      { type: 'sawtooth', freq: 185, toFreq: 170, dur: 0.5, gain: 0.07, attack: 0.006, release: 0.34, delay: 0 },
-    ])
-    // Practice mode — the same two sounds with the stakes taken out: a quieter,
-    // shorter tick, and a strike reduced to its impact with no alarm tail,
-    // because nothing ends here. Both play without overrides, so 'practice-
-    // wrong' is free to be an array.
-    .cue('practice-correct', { type: 'triangle', freq: 600, dur: 0.055, gain: 0.075, attack: 0.001, release: 0.05 })
-    .cue('practice-wrong', [
-      { type: 'noise', dur: 0.03, gain: 0.06, attack: 0.001, release: 0.029, delay: 0 },
-      { type: 'triangle', freq: 180, toFreq: 90, dur: 0.14, gain: 0.10, attack: 0.001, release: 0.12, delay: 0 },
-    ]);
-}
-// A2 wrapper — the single guarded play-site. Feature-detects Arcade.audio and
-// gates on the in-game mute toggle (state.soundEnabled).
-const sfx = (name, opts) => {
-  if (window.Arcade && Arcade.audio && state.soundEnabled) Arcade.audio.play(name, opts);
+// Registration and the sound design itself now live in js/audio.js and
+// js/soundpack.js, loaded in <head> above. Nothing about how a sound is MADE
+// belongs in this file any more — see js/soundpack.js for the design and
+// audio/chiptune-archive.mjs for the profile a stale cache still hears.
+const PiAudio = window.PiGameAudio || {
+  // Standalone off the launcher origin, or a cache stale enough to be missing
+  // js/audio.js entirely: every call site keeps working and stays silent.
+  isGraphMode: function () { return false; },
+  setEnabled: function () {},
+  playCorrect: function () {}, playWrong: function () {},
+  playPracticeCorrect: function () {}, playPracticeWrong: function () {},
 };
-// The tick, pitched by how deep into Pi you are, plus the streak accent above
-// it. Both ride per-play overrides (see the single-object cues above). The
-// accent's gain grows with the streak but tops out below the tick's own 0.14,
-// so a hot streak colours the metronome rather than shouting over it.
-function playCorrect(digitIndex) {
-  const freq = Math.min(440 + digitIndex * 8, 1200);
-  sfx('correct', { freq });
-  if (comboLevel > 3) sfx('combo', { freq: freq * 1.5, gain: 0.012 * Math.min(comboLevel, 10) });
-}
-
+PiAudio.setEnabled(state.soundEnabled);
 // ===== Particles =====
 const canvas = document.getElementById('particle-canvas');
 const pctx = canvas.getContext('2d');
@@ -1198,7 +1160,7 @@ function updateSoundBtn() {
   $btnSound.innerHTML = state.soundEnabled ? '&#x1F50A;' : '&#x1F507;';
   $btnSound.classList.toggle('muted', !state.soundEnabled);
 }
-$btnSound.addEventListener('click', () => { state.soundEnabled = !state.soundEnabled; updateSoundBtn(); saveState(); });
+$btnSound.addEventListener('click', () => { state.soundEnabled = !state.soundEnabled; PiAudio.setEnabled(state.soundEnabled); updateSoundBtn(); saveState(); });
 
 // ===== Leaderboard Modal =====
 function renderLeaderboard(target) {
@@ -1276,7 +1238,7 @@ function handleDigitPress(digit, btn) {
   $numpad.classList.toggle('combo-active', comboLevel > 5);
 
   if (digit === expected) {
-    state.userSequence += digit; saveState(); renderPiDigits(); playCorrect(idx);
+    state.userSequence += digit; saveState(); renderPiDigits(); PiAudio.playCorrect(idx, comboLevel);
     btn.classList.add('correct-flash'); setTimeout(() => btn.classList.remove('correct-flash'), 200);
     if (!Arcade.settings.reducedMotion()) {
       document.body.classList.add('shake-correct'); setTimeout(() => document.body.classList.remove('shake-correct'), 150);
@@ -1291,7 +1253,7 @@ function gameOver(btn) {
   const score = state.userSequence.length; lastGameScore = score;
   const timeMs = sessionTimer.elapsedMs();
   const timeSec = (timeMs / 1000).toFixed(1);
-  sfx('wrong');
+  PiAudio.playWrong();
   if (!Arcade.settings.reducedMotion()) {
     document.body.classList.add('shake-wrong'); setTimeout(() => document.body.classList.remove('shake-wrong'), 400);
   }
@@ -1431,7 +1393,7 @@ function handlePracticePress(digit, btn) {
 
   if (digit === expected) {
     practicePos++;
-    sfx('practice-correct');
+    PiAudio.playPracticeCorrect();
     btn.classList.add('correct-flash'); setTimeout(() => btn.classList.remove('correct-flash'), 150);
     if (typeof currentVisual !== 'undefined' && currentVisual) currentVisual.feedDigit(digit, practiceRangeStart + practicePos);
     renderPractice();
@@ -1439,7 +1401,7 @@ function handlePracticePress(digit, btn) {
       $practiceProgress.textContent = 'Complete!';
     }
   } else {
-    sfx('practice-wrong');
+    PiAudio.playPracticeWrong();
     btn.classList.add('wrong-flash'); setTimeout(() => btn.classList.remove('wrong-flash'), 300);
     // Flash the current digit red briefly
     const cur = $practiceDigits.querySelector('.current');
