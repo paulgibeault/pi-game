@@ -1,12 +1,20 @@
 // Pi Game — Service Worker
 // Caches all assets for offline play after first load.
 
-const CACHE_NAME = 'pi-game-v5';
+// v6: the graph sound pack — js/soundpack.js and js/audio.js ship for the
+// first time, and index.html changed to load them. Both are same-origin, so
+// they belong in ASSETS; the element library they depend on
+// (/arcade-audio.js) is launcher-owned and cross-origin, and is deliberately
+// NOT listed — when it is unavailable js/audio.js falls back to the archived
+// chiptune profile, which is exactly the behaviour offline should have.
+const CACHE_NAME = 'pi-game-v6';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './icon.svg',
+  './js/soundpack.js',
+  './js/audio.js',
   './visuals/tracer.js?v=2',
   './visuals/spirograph.js?v=2',
   './visuals/gallery.js?v=4',
