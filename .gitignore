@@ -1,3 +1,6 @@
 .go.log
 .go.pid
 arcade-sdk.js
+
+# Deploy artifact — staged by CI, never committed.
+dist/
