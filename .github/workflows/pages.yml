@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write # version_bump pushes the bump commit back to main
   pages: write
   id-token: write
 
@@ -22,3 +22,8 @@ concurrency:
 jobs:
   fleet:
     uses: paulgibeault/paulgibeault.github.io/.github/workflows/fleet-ci.yml@main
+    with:
+      # sw.js derives its cache name from APP_VERSION, which this step
+      # rewrites — without it the cache identity freezes and returning
+      # players never execute a deployed fix.
+      version_bump: true
