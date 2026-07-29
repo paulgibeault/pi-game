@@ -7,8 +7,13 @@
 //   Draft PR:      paulgibeault/pi-game#21
 //   Archived:      2026-07-24
 //
-// Nothing loads this file. It is data, preserved verbatim, awaiting a
-// selectable sound-profile system. See ./README.md.
+// Nothing loads this file. It is data, preserved verbatim. As of 2026-07-28
+// this is no longer an archive awaiting anything: the profile below IS the
+// game's shipped sound identity, registered inline in index.html ("=====
+// Audio ====="), adopted deliberately after the graph pack ("the memory
+// palace", PR #23) was auditioned live and reverted. Chiptune is this game's
+// aesthetic, not its fallback. Keep this file in sync with index.html if the
+// profile is ever retuned.
 //
 // ── SOUND IDENTITY (from the source header, verbatim) ───────────────────────
 // Sound identity: a recital under pressure. 'correct' is a metronome tick that
