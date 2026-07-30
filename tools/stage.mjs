@@ -12,8 +12,24 @@ import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { injectPrecache } from "./inject-precache.mjs";
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+// Published, deliberately not precached. This is the only knob on the
+// generated list (tools/inject-precache.mjs), and it is reviewed rather than
+// silent: tools/verify-artifact.mjs fails the build on any published file that
+// is neither cached nor named here.
+//
+// The frozen chiptune archive, kept as provenance for the aesthetic this game
+// still ships. Everything else here is small and boots the game.
+//
+// visuals/*.js are now cached: index.html asks for them with a `?v=` suffix,
+// which the generated list cannot carry, so the worker matches ignoreSearch.
+export const PRECACHE_EXCLUDE = [
+  "audio/chiptune-archive.mjs",
+];
+
 
 // Dev-only: tooling, tests, notes, and local helpers. Everything else a repo
 // tracks is game content and ships.
@@ -42,6 +58,9 @@ export function stage(outDir) {
     fs.copyFileSync(path.join(ROOT, f), path.join(outDir, f));
     staged++;
   }
+  // Last, so it sees the finished artifact — the precache list is written from
+  // what is actually about to deploy, not from what anyone believes is.
+  injectPrecache(outDir, { exclude: PRECACHE_EXCLUDE });
   return { outDir, staged, total: files.length };
 }
 
