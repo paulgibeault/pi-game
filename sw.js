@@ -14,7 +14,7 @@
 // Tracks the app version now, so it moves on every deploy. The old private
 // v7 counter is abandoned deliberately: only string inequality matters for
 // cache identity, so any change to this line invalidates correctly.
-const APP_VERSION = '1.0.1';
+const APP_VERSION = '1.0.2';
 
 // Every cache this game has ever owned starts with this prefix — including the
 // old hand-numbered 'pi-game-v7' names, so the switch to a version-derived
