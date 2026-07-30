@@ -1089,21 +1089,20 @@ function spawnErrorParticles(x, y) {
 
 /* Embedded visual classes replaced by modular scripts */
 
-let animationFrameId = null;
-function animateParticles() {
+// The SDK owns the frame loop: Arcade.loop cancels on suspend and re-arms on
+// resume, so this file no longer wires that by hand. It also parks itself when
+// there is nothing moving — start() and stop() are the idle flag.
+const animLoop = Arcade.loop(() => {
   pctx.clearRect(0, 0, canvas.width, canvas.height);
   particles = particles.filter(p => p.life > 0);
   particles.forEach(p => { p.update(); p.draw(pctx); }); pctx.globalAlpha = 1;
   const bendyActive = currentVisual ? currentVisual.update() : false;
   if (currentVisual) currentVisual.draw(pctx);
-  if (particles.length > 0 || bendyActive) {
-    animationFrameId = requestAnimationFrame(animateParticles);
-  } else {
-    animationFrameId = null;
-  }
-}
+  if (particles.length === 0 && !bendyActive) animLoop.stop();
+});
 function ensureAnimationLoop() {
-  if (!animationFrameId) animationFrameId = requestAnimationFrame(animateParticles);
+  // start() is idempotent — it never stacks a second frame request.
+  animLoop.start();
 }
 
 function triggerParticles(el, color) {
@@ -1519,11 +1518,11 @@ $retryBtn.addEventListener('click', () => { state.gameState = 'MENU'; saveState(
 // ===== Lifecycle (launcher iframe pool) =====
 Arcade.onSuspend(() => {
   stopTimer();
-  if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
+  // The frame loop is not cancelled here — Arcade.loop already parks itself on
+  // suspend and re-arms on resume if it was running.
 });
 Arcade.onResume(() => {
   if (state.gameState === 'PLAYING' && state.userSequence.length > 0) startTimer();
-  ensureAnimationLoop();
 });
 
 // Launcher imported a save while we were running — re-hydrate from disk.
