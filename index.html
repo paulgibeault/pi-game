@@ -114,9 +114,14 @@
   70% { transform: translate(-8px, 4px); } 80% { transform: translate(6px, -2px); }
   90% { transform: translate(-2px, 6px); }
 }
+/* The combo pulse. This used to animate `box-shadow` directly, which is not a
+   compositable property: the browser repainted the shadow region on the main
+   thread every single frame, forever (GAME_INTEGRATION §6d). The glow now
+   lives on a pseudo-element with a STATIC shadow — painted once — and only
+   its opacity animates, which the compositor handles on its own thread. */
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 5px var(--accent-glow); }
-  50% { box-shadow: 0 0 25px var(--accent-glow), 0 0 50px var(--accent-glow); }
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
 }
 @keyframes digit-pop {
   0% { transform: scale(0.5); opacity: 0; }
@@ -373,8 +378,19 @@ body {
 .pi-digit { display: inline-block; animation: digit-pop 0.25s ease-out; }
 .pi-digit.latest { color: var(--success-color); text-shadow: 0 0 10px var(--success-color); }
 [data-theme="orbital"] .pi-digit {
-  animation: digit-pop 0.25s ease-out, orbital-float calc(3s * var(--motion-scale, 1)) ease-in-out infinite;
+  animation: digit-pop 0.25s ease-out, orbital-float calc(3s * var(--motion-scale, 1)) ease-in-out;
   animation-delay: 0s, calc(var(--digit-index, 0) * 0.1s);
+  /* digit-pop is a one-shot; the float is the bounded ambient one. It rests
+     at translateY(0) — the digit's ordinary position, fully legible. */
+  animation-iteration-count: 1, var(--arcade-pulse-count, 3);
+}
+/* Power saver: the float is pure decoration, so it goes out entirely rather
+   than merely getting shorter (§5). The digit's entrance pop stays — it marks
+   a state change, which is exactly the motion that still earns its cost. */
+body.power-saver[data-theme="orbital"] .pi-digit {
+  animation: digit-pop 0.25s ease-out;
+  animation-delay: 0s;
+  animation-iteration-count: 1;
 }
 
 .digit-counter { font-size: 0.9rem; color: var(--text-muted); margin-top: 12px; letter-spacing: 0.1em; }
@@ -390,7 +406,10 @@ body {
   aspect-ratio: 1.2; font-family: var(--font-display); font-size: clamp(1.4rem, 4vw, 2rem);
   background: rgba(255, 255, 255, 0.05); color: var(--text);
   border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--btn-radius);
-  cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden;
+  /* No `overflow: hidden` — the button has no element children to clip, and
+     hiding overflow would clip the combo glow pseudo-element's box-shadow,
+     which by definition paints outside the button box. */
+  cursor: pointer; transition: all 0.15s; position: relative;
   backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
   user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
   pointer-events: auto;
@@ -400,7 +419,27 @@ body {
 .numpad-btn.correct-flash { border-color: var(--success-color) !important; box-shadow: 0 0 20px rgba(0, 255, 136, 0.4) !important; }
 .numpad-btn.wrong-flash { border-color: var(--error-color) !important; box-shadow: 0 0 20px rgba(255, 51, 102, 0.5) !important; background: rgba(255, 51, 102, 0.2) !important; }
 .numpad-btn.zero-btn { grid-column: 2; }
-.numpad.combo-active .numpad-btn { animation: pulse-glow calc(0.8s * var(--motion-scale, 1)) ease-in-out infinite; }
+/* Combo streak — RESTING treatment. Static, painted once when the class
+   lands, and it is what keeps "you are on a streak" legible after the pulse
+   has finished. Never remove this without replacing it: a state that goes
+   invisible once the animation ends is a bug, not a saving. */
+.numpad.combo-active .numpad-btn {
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+/* Combo streak — the finite pulse on top. The pseudo-element exists only
+   while the combo is active, so it is created (and the pulse re-armed) at
+   the moment the state changes and never on a re-render. `--arcade-pulse-count`
+   is the SDK's ladder: 3 normally, 1 under power saver, 0 under reduced
+   motion — and the var() fallback of 3 means this is correct on SDKs older
+   than 3.13.0, which never define the token at all. */
+.numpad.combo-active .numpad-btn::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  border-radius: inherit; opacity: 0;
+  box-shadow: 0 0 25px var(--accent-glow), 0 0 50px var(--accent-glow);
+  animation: pulse-glow calc(0.8s * var(--motion-scale, 1)) ease-in-out;
+  animation-iteration-count: var(--arcade-pulse-count, 3);
+}
 
 /* ===== Theme-Specific Overrides ===== */
 
@@ -432,14 +471,25 @@ body {
     transparent 100%
   );
   background-size: 100% 30%;
-  animation: neural-scanline calc(8s * var(--motion-scale, 1)) linear infinite;
+  animation: neural-scanline calc(8s * var(--motion-scale, 1)) linear;
+  /* Bounded sweep. With no fill-mode it rests at translateY(0), where the
+     tiled band pattern sits statically over the screen — the neural theme
+     still reads once the sweep stops. */
+  animation-iteration-count: var(--arcade-pulse-count, 3);
 }
 /* Orbital: subtle pulsing nebula */
 [data-theme="orbital"] .theme-overlay {
   opacity: 1;
   background: radial-gradient(ellipse at 30% 40%, rgba(124,92,252,0.06), transparent 50%);
-  animation: orbital-twinkle calc(6s * var(--motion-scale, 1)) ease-in-out infinite;
+  animation: orbital-twinkle calc(6s * var(--motion-scale, 1)) ease-in-out;
+  /* Rests at the rule's own opacity: 1 — the nebula stays on screen, it just
+     stops breathing. */
+  animation-iteration-count: var(--arcade-pulse-count, 3);
 }
+/* Power saver: ambient overlays are decorative by definition, so they are
+   gated off outright rather than shortened (§5). The static background of
+   each overlay survives; only the motion goes. */
+body.power-saver .theme-overlay { animation: none; }
 
 /* ===== Theme Button Previews ===== */
 .theme-btn[data-theme-choice="neural"] {
@@ -534,7 +584,12 @@ body {
 .autopsy-missed { color: var(--error-color); opacity: 0; display: inline-block; animation: autopsy-reveal 0.3s ease-out forwards; }
 .autopsy-cursor {
   display: inline-block; width: 2px; height: 1em; background: var(--error-color);
-  vertical-align: text-bottom; margin-left: 1px; animation: autopsy-cursor-blink 0.8s step-end infinite;
+  vertical-align: text-bottom; margin-left: 1px;
+  animation: autopsy-cursor-blink 0.8s step-end;
+  /* Blinks to draw the eye to where the run died, then rests SOLID (the
+     keyframe's own 0%/100% is opacity 1, and so is the element's base state),
+     which still marks the position. */
+  animation-iteration-count: var(--arcade-pulse-count, 3);
 }
 .autopsy-label { display: block; text-align: center; font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; letter-spacing: 0.1em; }
 .autopsy-study-link {
@@ -1050,6 +1105,30 @@ function playCorrect(digitIndex) {
   if (comboLevel > 3) sfx('combo', { freq: freq * 1.5, gain: 0.012 * Math.min(comboLevel, 10) });
 }
 
+// ===== Power saver =====
+// GAME_INTEGRATION §5 / §6d. The launcher's power-saver switch means "spend
+// nothing on decoration": ambient effects go out entirely and attention
+// pulses drop from 3 iterations to 1. The CSS half of that needs nothing from
+// us — `animation-iteration-count: var(--arcade-pulse-count, 3)` carries its
+// own fallback — but the ambient gate is a JS read, and it MUST be guarded:
+// Arcade.settings.powerSaver landed in SDK 3.13.0, and on anything older the
+// property is undefined, so calling it throws a TypeError. Because we re-read
+// inside onSettingsChange, an unguarded call would throw on every launcher
+// settings write, not just once at startup. An older SDK degrades to "not
+// saving", which is the correct default.
+let powerSaving = false;
+function readPowerSaver() {
+  return !!(window.Arcade && Arcade.settings && Arcade.settings.powerSaver
+    ? Arcade.settings.powerSaver()
+    : false);
+}
+function applyPowerSaver() {
+  powerSaving = readPowerSaver();
+  document.body.classList.toggle('power-saver', powerSaving);
+}
+applyPowerSaver();
+if (window.Arcade && Arcade.onSettingsChange) Arcade.onSettingsChange(applyPowerSaver);
+
 // ===== Particles =====
 const canvas = document.getElementById('particle-canvas');
 const pctx = canvas.getContext('2d');
@@ -1105,14 +1184,19 @@ function ensureAnimationLoop() {
   animLoop.start();
 }
 
+// Particles are decorative confetti — nothing about the game state is only
+// legible through them — so under power saver we don't spawn them at all.
+// Not spawning is what matters: the canvas loop is dirty-flag driven and
+// parks itself the moment `particles.length === 0`, so zero spawns means
+// zero frames rather than a loop drawing nothing.
 function triggerParticles(el, color) {
-  if (Arcade.settings.reducedMotion()) return;
+  if (powerSaving || Arcade.settings.reducedMotion()) return;
   const r = el.getBoundingClientRect();
   spawnParticles(r.left + r.width/2, r.top + r.height/2, color, Math.min(8 + comboLevel*3, 30));
   ensureAnimationLoop();
 }
 function triggerErrorParticles(el) {
-  if (Arcade.settings.reducedMotion()) return;
+  if (powerSaving || Arcade.settings.reducedMotion()) return;
   const r = el.getBoundingClientRect();
   spawnErrorParticles(r.left + r.width/2, r.top + r.height/2);
   ensureAnimationLoop();
@@ -1237,13 +1321,18 @@ function applyTheme(t) {
 $themeButtons.forEach(b => b.addEventListener('click', () => applyTheme(b.dataset.themeChoice)));
 
 // ===== Timer =====
+// Arcade.session.setInterval, not the bare one: the managed timer freezes
+// while the game is suspended and re-arms on resume (so a backgrounded run
+// stops repainting the clock instead of ticking against a paused
+// sessionTimer), and it cancels itself when the launcher imports a save.
+// It returns a handle with .cancel(), not a numeric id.
 function startTimer() {
   stopTimer();
-  timerInterval = setInterval(() => {
+  timerInterval = Arcade.session.setInterval(() => {
     $timerDisplay.textContent = (sessionTimer.elapsedMs() / 1000).toFixed(1) + 's';
   }, 100);
 }
-function stopTimer() { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } }
+function stopTimer() { if (timerInterval) { timerInterval.cancel(); timerInterval = null; } }
 
 // ===== Render Pi Display =====
 function renderPiDigits() {
