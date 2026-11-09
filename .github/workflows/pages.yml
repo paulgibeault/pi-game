@@ -32,3 +32,5 @@ jobs:
       # rewrites — without it the cache identity freezes and returning
       # players never execute a deployed fix.
       version_bump: true
+      # Publish the game's offline pack so the launcher can run it with no network.
+      offline_pack: true
